@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>NRW Karten-Editor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+header {
+  background: #0f0f20; padding: 10px 18px;
+  display: flex; align-items: center; gap: 14px;
+  border-bottom: 2px solid #c0001a; flex-shrink: 0;
+}
+header h1 { font-size: 15px; font-weight: 700; }
+header p  { font-size: 11px; color: #888; }
+
+.toolbar {
+  background: #0f0f20; padding: 7px 14px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-bottom: 1px solid #2a2a40; flex-shrink: 0;
+}
+.sep { width: 1px; height: 24px; background: #2a2a40; margin: 0 4px; }
+label.tlabel { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing:.05em; white-space:nowrap; }
+
+.bez-btn {
+  padding: 4px 10px; border-radius: 4px; border: 1.5px solid;
+  cursor: pointer; font-size: 11px; font-weight: 700;
+  background: transparent; color: white; transition: all .15s;
+}
+.bez-btn.on { color: white !important; }
+
+.mode-btn {
+  padding: 4px 10px; border-radius: 4px; border: 1.5px solid #444;
+  background: transparent; color: #bbb; font-size: 11px; cursor: pointer; transition: all .15s;
+}
+.mode-btn.on { background: #0055a4; border-color: #0055a4; color: white; }
+
+.tbtn {
+  padding: 4px 11px; border-radius: 4px; border: none; cursor: pointer;
+  font-size: 11px; font-weight: 600; transition: filter .15s;
+}
+.tbtn:hover { filter: brightness(1.2); }
+.tbtn.gray  { background: #333; color: #ddd; }
+.tbtn.green { background: #2e7d52; color: white; }
+.tbtn.blue  { background: #1a5fa0; color: white; }
+.tbtn.red   { background: #9a1020; color: white; }
+
+select { background:#1a1a30; color:#ddd; border:1px solid #444; border-radius:3px; padding:3px 6px; font-size:11px; }
+input[type=range] { width: 70px; }
+
+.workspace { flex: 1; display: flex; overflow: hidden; }
+
+.canvas-wrap {
+  flex: 1; overflow: hidden; position: relative; background: #2a2a3a; cursor: crosshair;
+  user-select: none;
+}
+
+/* The viewport div is panned/zoomed via transform */
+#viewport {
+  position: absolute; top: 0; left: 0;
+  transform-origin: 0 0;
+}
+
+#ref-img {
+  position: absolute; top: 0; left: 0;
+  pointer-events: none; opacity: .3;
+  display: none;
+}
+
+#main-svg { display: block; overflow: visible; }
+
+.panel {
+  width: 285px; background: #0f0f20; border-left: 1px solid #2a2a40;
+  display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+}
+.psec { padding: 10px 12px; border-bottom: 1px solid #2a2a40; }
+.psec h3 { font-size: 10px; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:.07em; margin-bottom:7px; }
+.row { display:flex; justify-content:space-between; font-size:11px; color:#999; margin-bottom:3px; }
+.row strong { color:#eee; font-family:monospace; font-size:10.5px; }
+
+.tip { font-size:10.5px; color:#666; line-height:1.7; padding:9px 12px; border-bottom:1px solid #2a2a40; }
+.tip b { color:#89b4e0; }
+
+.codebox {
+  background: #070714; border:1px solid #2a2a40; border-radius:4px;
+  padding:8px; font-size:9.5px; font-family:monospace; color:#6ec6e0;
+  white-space:pre-wrap; word-break:break-all; overflow-y:auto; line-height:1.5;
+  flex: 1; min-height: 0;
+}
+.status { font-size:10px; color:#888; padding:5px 12px; background:#070714; border-top:1px solid #2a2a40; flex-shrink:0; }
+.coords { font-size:10px; font-family:monospace; color:#555; padding:4px 12px; border-bottom:1px solid #1a1a2e; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🗺 NRW Karten-Editor</h1>
+    <p>Punkte per Drag & Drop verschieben · Mausrad = Zoom · Rechtsklick-Ziehen = Panning</p>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label class="tlabel">Bezirk:</label>
+  <button class="bez-btn on" data-bez="nrw_outer"  style="border-color:#aaa"    onclick="selBez('nrw_outer',this)">NRW-Rand</button>
+  <button class="bez-btn"    data-bez="Münster"    style="border-color:#2e8b57" onclick="selBez('Münster',this)">Münster</button>
+  <button class="bez-btn"    data-bez="Detmold"    style="border-color:#3a6ea5" onclick="selBez('Detmold',this)">Detmold</button>
+  <button class="bez-btn"    data-bez="Arnsberg"   style="border-color:#b8860b" onclick="selBez('Arnsberg',this)">Arnsberg</button>
+  <button class="bez-btn"    data-bez="Düsseldorf" style="border-color:#c0001a" onclick="selBez('Düsseldorf',this)">Düsseldorf</button>
+  <button class="bez-btn"    data-bez="Köln"       style="border-color:#9b59b6" onclick="selBez('Köln',this)">Köln</button>
+
+  <div class="sep"></div>
+  <label class="tlabel">Modus:</label>
+  <button class="mode-btn on" id="m-move" onclick="setMode('move')">✥ Bewegen</button>
+  <button class="mode-btn"    id="m-add"  onclick="setMode('add')">＋ Einfügen</button>
+  <button class="mode-btn"    id="m-del"  onclick="setMode('del')">✕ Löschen</button>
+
+  <div class="sep"></div>
+  <label class="tlabel">Zoom:</label>
+  <button class="tbtn gray" onclick="zoomBtn(1.3)">＋</button>
+  <button class="tbtn gray" onclick="zoomBtn(1/1.3)">－</button>
+  <button class="tbtn gray" onclick="fitView()">Fit</button>
+
+  <div class="sep"></div>
+  <label class="tlabel">Raster:</label>
+  <select id="snap-sel" onchange="snapSz=+this.value">
+    <option value="0">Aus</option>
+    <option value="2">2 px</option>
+    <option value="5" selected>5 px</option>
+    <option value="10">10 px</option>
+  </select>
+
+  <div class="sep"></div>
+  <label class="tlabel">Referenz:</label>
+  <input type="range" min="0" max="80" value="30"
+    oninput="setRefOp(+this.value)">
+  <span id="ropv" style="font-size:10px;color:#888;min-width:28px">30%</span>
+  <button class="tbtn gray" onclick="pickImg()">🖼 Bild</button>
+
+  <div class="sep"></div>
+  <button class="tbtn gray"  onclick="undo()">↩ Undo</button>
+  <button class="tbtn green" onclick="copyBez()">📋 Kopieren</button>
+  <button class="tbtn blue"  onclick="copyAll()">📋 Alle</button>
+  <button class="tbtn red"   onclick="resetBez()">↺ Reset</button>
+</div>
+
+<div class="workspace">
+  <div class="canvas-wrap" id="cwrap">
+    <div id="viewport">
+      <img id="ref-img" alt="">
+      <svg id="main-svg" xmlns="http://www.w3.org/2000/svg">
+        <g id="g-fills"></g>
+        <g id="g-outer"></g>
+        <g id="g-mids"></g>
+        <g id="g-pts"></g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="psec">
+      <h3>Info</h3>
+      <div class="row"><span>Bezirk</span>   <strong id="i-bez">–</strong></div>
+      <div class="row"><span>Punkte</span>   <strong id="i-cnt">–</strong></div>
+      <div class="row"><span>Punkt #</span>  <strong id="i-pt">–</strong></div>
+      <div class="row"><span>Position</span> <strong id="i-xy">–</strong></div>
+    </div>
+
+    <div class="coords" id="coords">SVG: –</div>
+
+    <div class="tip">
+      <b>Bewegen:</b> Punkt anfassen &amp; ziehen<br>
+      <b>Fein:</b> Punkt klicken → Pfeiltasten (Shift = ×10)<br>
+      <b>Einfügen:</b> Halbtr. Mittelpunkte klicken<br>
+      <b>Löschen:</b> Punkt anklicken<br>
+      <b>Pan:</b> Rechtsklick-Ziehen<br>
+      <b>Zoom:</b> Mausrad (auf Karte)
+    </div>
+
+    <div class="psec" style="flex:1;display:flex;flex-direction:column;min-height:0;gap:6px">
+      <h3>SVG-Pfad (aktiver Bezirk)</h3>
+      <div class="codebox" id="codebox">–</div>
+      <button class="tbtn green" style="width:100%;padding:6px" onclick="copyBez()">📋 Diesen Pfad kopieren</button>
+    </div>
+
+    <div class="status" id="status">Bereit – Bezirk wählen, dann Punkte justieren</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+//  CONFIG  – SVG viewBox size must match nrw_pok_karte.html
+// ─────────────────────────────────────────────────────────
+const VW = 700, VH = 580;
+
+const COLORS = {
+  nrw_outer:'#aaa', Münster:'#2e8b57', Detmold:'#3a6ea5',
+  Arnsberg:'#b8860b', Düsseldorf:'#c0001a', Köln:'#9b59b6'
+};
+const FILLS = {
+  Münster:'rgba(46,139,87,.28)', Detmold:'rgba(58,110,165,.28)',
+  Arnsberg:'rgba(184,134,11,.28)', Düsseldorf:'rgba(192,0,26,.28)', Köln:'rgba(155,89,182,.28)'
+};
+
+// ─────────────────────────────────────────────────────────
+//  INITIAL POINT DATA  (SVG coords, same as nrw_pok_karte.html)
+// ─────────────────────────────────────────────────────────
+const INIT = {
+  nrw_outer:[
+    [583.7,17],[570.7,13],[550.9,41.6],[511,43.5],[508.3,12.8],[499.9,6.1],
+    [475.3,11.4],[462.7,30.3],[440.1,28.4],[442.6,44],[464.8,57.4],[467,99],
+    [476.2,111.7],[460,128.3],[437.3,123.9],[423.3,141.1],[394.9,144],[386.9,152],
+    [370.8,142.6],[389.7,129.3],[392.4,116.1],[370.6,108.7],[375.8,75.9],[384.9,72.5],
+    [367.8,53.6],[335.1,49.6],[330.5,33.6],[315.8,26.9],[308.6,58],[262.2,89.8],
+    [207.6,100.9],[183.1,132.7],[166.1,133.7],[154.1,155.6],[178.3,169.3],[179.1,178.3],
+    [165.4,195.1],[151,192.8],[119.3,209.5],[101,205.5],[101.8,216.4],[65.7,206.3],
+    [56.7,196.2],[48.1,199.4],[56.9,213],[40.5,208],[22,216.4],[26.2,237.6],
+    [20.8,243.9],[33.6,247.3],[34.8,262.2],[48.5,267.3],[45.8,282.8],[69.5,319.7],
+    [69.3,355.4],[41.6,395.1],[43.9,408.6],[55,408],[57.9,416],[22,445.4],
+    [13.9,439.3],[4.4,443.9],[10.7,465.4],[30.6,464.3],[32.1,476.7],[43.5,481.4],
+    [43.9,499.4],[24.4,515.9],[33.2,522.2],[36.5,539.8],[50.8,538.6],[60,555.8],
+    [278.8,555.8],[281.5,539],[320.6,532.3],[323.8,523.6],[337.4,520.1],[337.2,508.1],
+    [351.9,500.7],[351.5,478.8],[361.3,473.8],[364.5,489.6],[391.4,500.3],[392.6,521.3],
+    [406.3,542.4],[421.4,545.9],[428.5,531.8],[423.1,514.8],[444.5,490.8],[462.8,493.8],
+    [478.1,477.2],[493.2,446.7],[490.3,424.6],[525.7,418.9],[522.2,409.7],[533.5,390.7],
+    [523.8,372],[500.5,379.2],[497,368.2],[516.7,342.4],[562.5,336.3],[554.7,309.5],
+    [563.7,303.5],[587.9,304.3],[589.6,319.4],[611.4,314.8],[612.2,306],[627.3,297.8],
+    [633.6,268.3],[648.6,260.8],[638.5,259.5],[637.4,227.8],[649.6,198.1],[628.4,197.1],
+    [616,166.3],[600.9,165.3],[591.9,120.5],[567.9,117.1],[577.6,90],[560.2,82.7],
+    [560.4,73],[579.9,48.8]
+  ],
+  Münster:[
+    [41.3,0],[330,0],[349.7,108],[316.6,173],[300,188.7],[266.8,210.7],
+    [255.2,235.9],[238.7,251.6],[222.1,264.2],[205.5,235.9],[180.6,242.2],
+    [155.7,235.9],[134.2,251.6],[114.3,235.9],[101,220.2],[81.1,210.7],
+    [61.2,201.3],[41.3,173]
+  ],
+  Detmold:[
+    [330,0],[700,0],[700,260],[638.3,169.9],[631.6,232.7],[591.8,273.6],
+    [548.7,305],[504,336.5],[459.2,352.2],[416.1,345.9],[382.9,305],
+    [354.7,273.6],[343.1,220.2],[349.7,147.9],[349.7,108]
+  ],
+  Arnsberg:[
+    [255.2,235.9],[266.8,210.7],[300,188.7],[316.6,173],[349.7,147.9],
+    [343.1,220.2],[354.7,273.6],[382.9,305],[416.1,345.9],[459.2,352.2],
+    [504,336.5],[548.7,305],[591.8,273.6],[631.6,232.7],[638.3,169.9],
+    [700,260],[700,580],[638.3,580],[528.8,565.9],[487.4,565.9],[432.7,575],
+    [392.9,575],[349.7,560],[313.3,525],[288.4,488],[266.8,455],
+    [243.6,425],[230.4,385],[230.4,315],[243.6,270]
+  ],
+  Düsseldorf:[
+    [41.3,173],[61.2,201.3],[81.1,210.7],[101,220.2],[114.3,235.9],
+    [134.2,251.6],[155.7,235.9],[180.6,242.2],[205.5,235.9],[222.1,264.2],
+    [238.7,251.6],[243.6,270],[230.4,315],[230.4,385],[243.6,425],
+    [230.4,472],[210.5,510],[183.9,528],[150.8,540],[122.6,550],
+    [94.4,528],[64.6,488],[44.7,455],[41.3,173]
+  ],
+  Köln:[
+    [94.4,528],[122.6,550],[150.8,540],[183.9,528],[210.5,510],
+    [230.4,472],[243.6,425],[266.8,455],[288.4,488],[313.3,525],
+    [349.7,560],[392.9,575],[432.7,575],[487.4,565.9],[528.8,565.9],
+    [638.3,580],[0,580],[41.3,528],[64.6,488]
+  ]
+};
+
+// ─────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────
+let pts = {};
+for (const k in INIT) pts[k] = INIT[k].map(p=>[...p]);
+
+let hist    = [];
+let curBez  = 'nrw_outer';
+let curMode = 'move';
+let snapSz  = 5;
+let selPt   = null;
+
+// Pan/zoom
+let panX=0, panY=0, zoom=1;
+let panning=false, panSX=0, panSY=0, panOX=0, panOY=0;
+// Drag
+let dragging=false, dragIdx=null;
+
+// ─────────────────────────────────────────────────────────
+//  SVG SETUP
+// ─────────────────────────────────────────────────────────
+const svg = document.getElementById('main-svg');
+svg.setAttribute('width', VW);
+svg.setAttribute('height', VH);
+svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+
+const refImg = document.getElementById('ref-img');
+refImg.style.width  = VW + 'px';
+refImg.style.height = VH + 'px';
+
+function applyVP() {
+  document.getElementById('viewport').style.transform =
+    `translate(${panX}px,${panY}px) scale(${zoom})`;
+}
+
+function fitView() {
+  const wrap = document.getElementById('cwrap');
+  const ww = wrap.clientWidth, wh = wrap.clientHeight;
+  zoom  = Math.min((ww-40)/VW, (wh-40)/VH);
+  panX  = (ww - VW*zoom)/2;
+  panY  = (wh - VH*zoom)/2;
+  applyVP();
+}
+
+// ─────────────────────────────────────────────────────────
+//  COORDINATE MAPPING
+//  clientXY → SVG coordinate (accounts for pan, zoom, wrap offset)
+// ─────────────────────────────────────────────────────────
+function toSVG(cx, cy) {
+  const wrap = document.getElementById('cwrap');
+  const rect = wrap.getBoundingClientRect();
+  let x = (cx - rect.left - panX) / zoom;
+  let y = (cy - rect.top  - panY) / zoom;
+  if (snapSz > 0) { x = Math.round(x/snapSz)*snapSz; y = Math.round(y/snapSz)*snapSz; }
+  return [r1(x), r1(y)];
+}
+function r1(v) { return Math.round(v*10)/10; }
+
+// ─────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────
+function render() { renderFills(); renderPts(); updatePanel(); }
+
+function toD(arr) {
+  if (!arr || arr.length<2) return '';
+  return 'M '+arr.map(p=>`${p[0]},${p[1]}`).join(' L ')+' Z';
+}
+
+function mkSVG(tag) { return document.createElementNS('http://www.w3.org/2000/svg',tag); }
+
+function renderFills() {
+  const gf=document.getElementById('g-fills');
+  const go=document.getElementById('g-outer');
+  gf.innerHTML=''; go.innerHTML='';
+
+  for (const name in FILLS) {
+    const p=mkSVG('path');
+    p.setAttribute('d', toD(pts[name]));
+    p.setAttribute('fill', FILLS[name]);
+    p.setAttribute('stroke', COLORS[name]);
+    p.setAttribute('stroke-width', name===curBez?'2.5':'1.5');
+    p.setAttribute('stroke-linejoin','round');
+    gf.appendChild(p);
+  }
+
+  const outer=mkSVG('path');
+  outer.setAttribute('d', toD(pts.nrw_outer));
+  outer.setAttribute('fill','none');
+  outer.setAttribute('stroke', curBez==='nrw_outer'?'#fff':'#8a8070');
+  outer.setAttribute('stroke-width', curBez==='nrw_outer'?'3':'2');
+  outer.setAttribute('stroke-linejoin','round');
+  go.appendChild(outer);
+}
+
+function renderPts() {
+  const gp=document.getElementById('g-pts');
+  const gm=document.getElementById('g-mids');
+  gp.innerHTML=''; gm.innerHTML='';
+  const arr=pts[curBez]; if(!arr) return;
+  const col=COLORS[curBez];
+  // Point radius that stays constant on screen regardless of zoom
+  const r = Math.max(4, 6/zoom);
+  const rSel = Math.max(5, 8/zoom);
+  const fs = Math.max(5, 7/zoom);
+
+  // Midpoints (add mode)
+  if (curMode==='add') {
+    arr.forEach((p,i)=>{
+      const nx=arr[(i+1)%arr.length];
+      const mx=r1((p[0]+nx[0])/2), my=r1((p[1]+nx[1])/2);
+      const c=mkSVG('circle');
+      c.setAttribute('cx',mx); c.setAttribute('cy',my); c.setAttribute('r',r*1.4);
+      c.setAttribute('fill',col); c.setAttribute('stroke','white');
+      c.setAttribute('stroke-width',1/zoom); c.setAttribute('opacity','0.5');
+      c.style.cursor='cell';
+      c.addEventListener('click',e=>{ e.stopPropagation(); insertPt(i,mx,my); });
+      const t=mkSVG('text');
+      t.setAttribute('x',mx); t.setAttribute('y',r1(my+fs*0.35));
+      t.setAttribute('text-anchor','middle'); t.setAttribute('font-size',fs);
+      t.setAttribute('fill','white'); t.setAttribute('pointer-events','none');
+      t.textContent='+';
+      gm.appendChild(c); gm.appendChild(t);
+    });
+  }
+
+  // Control points
+  arr.forEach((p,i)=>{
+    const isSel=i===selPt;
+    const c=mkSVG('circle');
+    c.setAttribute('cx',p[0]); c.setAttribute('cy',p[1]);
+    c.setAttribute('r', isSel?rSel:r);
+    c.setAttribute('fill',col);
+    c.setAttribute('stroke',isSel?'white':'rgba(255,255,255,.65)');
+    c.setAttribute('stroke-width', isSel?2/zoom:1.5/zoom);
+    c.setAttribute('data-i',i);
+    if (curMode==='move') {
+      c.style.cursor='grab';
+      c.addEventListener('mousedown',e=>startDrag(e,i));
+    } else if (curMode==='del') {
+      c.style.cursor='not-allowed';
+      c.addEventListener('click',e=>{ e.stopPropagation(); deletePt(i); });
+    }
+    c.addEventListener('click',()=>{ selPt=i; updatePanel(); renderPts(); });
+
+    const t=mkSVG('text');
+    t.setAttribute('x',p[0]); t.setAttribute('y',r1(p[1]+fs*0.4));
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size',fs);
+    t.setAttribute('fill','white'); t.setAttribute('pointer-events','none');
+    t.textContent=i;
+    gp.appendChild(c); gp.appendChild(t);
+  });
+}
+
+function updatePanel() {
+  document.getElementById('i-bez').textContent=curBez;
+  document.getElementById('i-cnt').textContent=(pts[curBez]?.length||0)+' Punkte';
+  if (selPt!==null && pts[curBez]?.[selPt]) {
+    const [x,y]=pts[curBez][selPt];
+    document.getElementById('i-pt').textContent='#'+selPt;
+    document.getElementById('i-xy').textContent=`x=${x}  y=${y}`;
+  } else {
+    document.getElementById('i-pt').textContent='–';
+    document.getElementById('i-xy').textContent='–';
+  }
+  document.getElementById('codebox').textContent=toD(pts[curBez])||'–';
+}
+
+// ─────────────────────────────────────────────────────────
+//  POINT OPS
+// ─────────────────────────────────────────────────────────
+function push() {
+  hist.push({bez:curBez, arr:pts[curBez].map(p=>[...p]), sel:selPt});
+  if(hist.length>60) hist.shift();
+}
+function insertPt(afterI,x,y) { push(); pts[curBez].splice(afterI+1,0,[x,y]); selPt=afterI+1; render(); }
+function deletePt(i) {
+  if(pts[curBez].length<=3){setStatus('⚠ Mind. 3 Punkte nötig');return;}
+  push(); pts[curBez].splice(i,1);
+  if(selPt>=pts[curBez].length) selPt=pts[curBez].length-1;
+  render();
+}
+
+// ─────────────────────────────────────────────────────────
+//  DRAG
+// ─────────────────────────────────────────────────────────
+function startDrag(e,i) {
+  if(curMode!=='move') return;
+  e.preventDefault(); e.stopPropagation();
+  push(); dragging=true; dragIdx=i; selPt=i;
+  document.addEventListener('mousemove',onDrag);
+  document.addEventListener('mouseup',stopDrag);
+}
+function onDrag(e) {
+  if(!dragging) return;
+  const [x,y]=toSVG(e.clientX,e.clientY);
+  pts[curBez][dragIdx]=[x,y];
+  renderFills(); renderPts(); updatePanel();
+}
+function stopDrag() {
+  dragging=false; dragIdx=null;
+  document.removeEventListener('mousemove',onDrag);
+  document.removeEventListener('mouseup',stopDrag);
+  setStatus('Punkt verschoben.');
+}
+
+// ─────────────────────────────────────────────────────────
+//  PAN  (right mouse button drag)
+// ─────────────────────────────────────────────────────────
+const cwrap=document.getElementById('cwrap');
+cwrap.addEventListener('contextmenu',e=>e.preventDefault());
+cwrap.addEventListener('mousedown',e=>{
+  if(e.button===1||e.button===2){
+    e.preventDefault(); panning=true;
+    panSX=e.clientX; panSY=e.clientY; panOX=panX; panOY=panY;
+    cwrap.style.cursor='grabbing';
+  }
+});
+document.addEventListener('mousemove',e=>{
+  if(panning){ panX=panOX+(e.clientX-panSX); panY=panOY+(e.clientY-panSY); applyVP(); }
+  const [x,y]=toSVG(e.clientX,e.clientY);
+  document.getElementById('coords').textContent=`SVG: x=${x}  y=${y}  (zoom ${zoom.toFixed(2)}×)`;
+});
+document.addEventListener('mouseup',e=>{
+  if(panning){panning=false; cwrap.style.cursor='crosshair';}
+});
+
+// ─────────────────────────────────────────────────────────
+//  ZOOM  (mouse wheel)
+// ─────────────────────────────────────────────────────────
+cwrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=e.deltaY<0?1.12:1/1.12;
+  const rect=cwrap.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  panX=mx-(mx-panX)*f; panY=my-(my-panY)*f;
+  zoom=Math.max(0.15,Math.min(25,zoom*f));
+  applyVP();
+  renderPts(); // resize point markers
+},{passive:false});
+
+function zoomBtn(f) {
+  const rect=cwrap.getBoundingClientRect();
+  const mx=rect.width/2, my=rect.height/2;
+  panX=mx-(mx-panX)*f; panY=my-(my-panY)*f;
+  zoom=Math.max(0.15,Math.min(25,zoom*f));
+  applyVP(); renderPts();
+}
+
+// ─────────────────────────────────────────────────────────
+//  KEYBOARD (arrow keys)
+// ─────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  if(selPt===null||curMode!=='move') return;
+  e.preventDefault();
+  const step=e.shiftKey?10:1;
+  const p=pts[curBez]?.[selPt]; if(!p) return;
+  push();
+  if(e.key==='ArrowLeft')  p[0]=r1(p[0]-step);
+  if(e.key==='ArrowRight') p[0]=r1(p[0]+step);
+  if(e.key==='ArrowUp')    p[1]=r1(p[1]-step);
+  if(e.key==='ArrowDown')  p[1]=r1(p[1]+step);
+  render();
+});
+
+// ─────────────────────────────────────────────────────────
+//  TOOLBAR ACTIONS
+// ─────────────────────────────────────────────────────────
+function selBez(name,btn) {
+  curBez=name; selPt=null;
+  document.querySelectorAll('.bez-btn').forEach(b=>{
+    b.classList.remove('on'); b.style.background='transparent';
+  });
+  btn.classList.add('on');
+  btn.style.background=(COLORS[name]||'#888')+'40';
+  render();
+  setStatus(`Aktiv: ${name}  (${pts[name]?.length||0} Punkte)`);
+}
+
+function setMode(m) {
+  curMode=m; selPt=null;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('m-'+m).classList.add('on');
+  render();
+}
+
+function undo() {
+  if(!hist.length){setStatus('Nichts rückgängig');return;}
+  const h=hist.pop(); pts[h.bez]=h.arr; selPt=h.sel;
+  if(curBez!==h.bez) selBez(h.bez, document.querySelector(`.bez-btn[data-bez="${h.bez}"]`));
+  render(); setStatus('↩ Rückgängig');
+}
+
+function resetBez() {
+  if(!confirm(`${curBez} zurücksetzen?`)) return;
+  push(); pts[curBez]=INIT[curBez].map(p=>[...p]); selPt=null; render();
+  setStatus(`${curBez} zurückgesetzt`);
+}
+
+function setRefOp(v) {
+  refImg.style.opacity=v/100;
+  document.getElementById('ropv').textContent=v+'%';
+}
+
+function copyBez() {
+  navigator.clipboard.writeText(toD(pts[curBez]));
+  setStatus('✅ Pfad in Zwischenablage!');
+}
+
+function copyAll() {
+  let out=`<!-- Alle Pfade – viewBox="0 0 ${VW} ${VH}" -->\n\n`;
+  out+=`<!-- NRW Außengrenze -->\n<path id="nrw-border" d="${toD(pts.nrw_outer)}" fill="none" stroke="#8a8070" stroke-width="2.5"/>\n\n`;
+  for(const n in FILLS)
+    out+=`<!-- ${n} -->\n<path class="bezirk-region" data-bez="${n}" d="${toD(pts[n])}" fill="..." stroke="white" stroke-width="1.8" stroke-linejoin="round"/>\n\n`;
+  navigator.clipboard.writeText(out);
+  setStatus('✅ Alle Pfade kopiert!');
+}
+
+function pickImg() {
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*';
+  inp.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      refImg.src=ev.target.result; refImg.style.display='block';
+      setStatus('📷 Referenzbild geladen – Transparenz mit dem Regler anpassen');
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+function setStatus(m){document.getElementById('status').textContent=m;}
+
+// drag-drop image onto canvas
+cwrap.addEventListener('dragover',e=>e.preventDefault());
+cwrap.addEventListener('drop',e=>{
+  e.preventDefault();
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')){
+    const rd=new FileReader();
+    rd.onload=ev=>{ refImg.src=ev.target.result; refImg.style.display='block'; setStatus('📷 Bild geladen'); };
+    rd.readAsDataURL(f);
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{ fitView(); render(); });
+window.addEventListener('resize',fitView);
+</script>
+</body>
+</html>
