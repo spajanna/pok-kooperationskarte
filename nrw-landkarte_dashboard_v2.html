@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variante 2 · PoK-Dashboard NRW</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+
+  :root {
+    --navy: #003064; --green: #009036; --red: #E2001A; --gray: #D9D9D9;
+    --teal: #175E54; --berry: #882345; --text: #1a1a2e; --muted: #6b7280; --border: #e3e3e3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Open Sans', sans-serif; background: #f5f6f8; color: var(--text); }
+
+  header {
+    background: var(--navy); color: white; padding: 20px 32px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+    position: relative; overflow: hidden;
+  }
+  header::after { content:''; position:absolute; top:0; right:0; width:100px; height:100px; background:var(--red); clip-path:polygon(100% 0,0 0,100% 100%); z-index:0; }
+  header::before { content:''; position:absolute; bottom:0; left:0; width:80px; height:80px; background:var(--green); clip-path:polygon(0 100%,0 0,100% 100%); z-index:0; }
+  header > * { position: relative; z-index: 1; }
+  .htitle { font-size: 21px; font-weight: 800; }
+  .hsub { font-size: 12.5px; color: #c8d4e6; margin-top: 3px; }
+  .logo { font-size: 11px; font-weight: 700; letter-spacing: .04em; background: rgba(255,255,255,.12); padding: 6px 12px; border-radius: 4px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; padding: 22px 32px; }
+  .kpi-card { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06); border-top: 4px solid var(--navy); }
+  .kpi-num { font-size: 34px; font-weight: 800; color: var(--navy); line-height: 1; }
+  .kpi-label { font-size: 11.5px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+  .kpi-card.red { border-top-color: var(--red); } .kpi-card.red .kpi-num { color: var(--red); }
+  .kpi-card.green { border-top-color: var(--green); } .kpi-card.green .kpi-num { color: var(--green); }
+  .kpi-card.teal { border-top-color: var(--teal); } .kpi-card.teal .kpi-num { color: var(--teal); }
+
+  .main { display: grid; grid-template-columns: 1fr 320px; gap: 18px; padding: 0 32px 28px; }
+
+  .map-card { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); overflow: hidden; position: relative; height: 640px; }
+  .map-toolbar { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+  .filter-pill { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: white; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; }
+  .filter-pill.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  #svg { width: 100%; height: calc(100% - 53px); display: block; }
+  .bezirk-label { font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .08em; fill: rgba(0,48,100,.4); text-anchor: middle; pointer-events: none; }
+  .hub-node polygon { filter: drop-shadow(0 2px 5px rgba(0,0,0,.25)); transition: filter .15s; cursor: pointer; }
+  .hub-node:hover polygon { filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+  .school-node circle { filter: drop-shadow(0 1px 3px rgba(0,0,0,.25)); transition: all .15s; cursor: pointer; }
+  .school-node:hover circle, .school-node.hl circle { r: 9; }
+  .school-node.dim circle { opacity: .2; }
+  .hub-node.dim polygon { opacity: .2; }
+  .link-line { stroke-dasharray: 5 3; animation: dash 18s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -160; } }
+  .link-line.dim { opacity: .1; }
+
+  .side-panel { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); display: flex; flex-direction: column; height: 640px; overflow: hidden; }
+  .sp-head { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .sp-head h3 { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .coop-list { flex: 1; overflow-y: auto; padding: 10px 12px; }
+  .coop-item { padding: 12px; border-radius: 9px; cursor: pointer; margin-bottom: 8px; border: 1.5px solid var(--border); transition: all .15s; }
+  .coop-item:hover { border-color: var(--navy); }
+  .coop-item.sel { background: #eef2f8; border-color: var(--navy); }
+  .ci-name { font-size: 12.5px; font-weight: 700; line-height: 1.35; color: var(--navy); }
+  .ci-meta { font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+  .ci-status { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-top: 6px; }
+
+  .detail-panel { grid-column: 1/-1; background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); padding: 20px 26px; margin: 0 32px 28px; }
+  .detail-empty { color: var(--muted); font-style: italic; text-align: center; padding: 30px; }
+  .ib-title { font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 5px; }
+  .ib-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .ib-desc { font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+  .ib-schools { display: flex; flex-wrap: wrap; gap: 7px; }
+  .ib-school-tag { font-size: 11.5px; padding: 5px 11px; border-radius: 20px; background: var(--gray); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .ib-school-tag .check { color: var(--green); font-weight: 800; }
+  .ib-school-tag .pend { color: var(--red); font-weight: 800; }
+  .ib-tags { display:flex; gap:7px; margin-bottom:10px; flex-wrap:wrap; }
+  .ib-tag { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: 20px; color: white; }
+
+  .school-tooltip {
+    position: fixed; background: rgba(20,20,40,.94); color: white;
+    padding: 7px 11px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    pointer-events: none; z-index: 999; display: none; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  }
+  .school-tooltip .tt-ort { font-weight: 400; color: #c8d4e6; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="htitle">PoK-Kooperationsdashboard NRW</div>
+    <div class="hsub">Schulübergreifende Distanz-/Hybridkooperationen · AP 1.6 · Stand Juni 2026</div>
+  </div>
+  <div class="logo">DigGS.NRW</div>
+</header>
+
+<div class="kpi-row" id="kpi-row"></div>
+
+<div class="main">
+  <div class="map-card">
+    <div class="map-toolbar">
+      <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-right:6px">Filter:</span>
+      <button class="filter-pill active" data-anlage="alle" onclick="setAnlage('alle',this)">Alle</button>
+      <button class="filter-pill" data-anlage="A" onclick="setAnlage('A',this)">Anlage A</button>
+      <button class="filter-pill" data-anlage="E" onclick="setAnlage('E',this)">Anlage E</button>
+    </div>
+    <svg id="svg" viewBox="0 0 700 580" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="clip1"><path id="clipPath1"/></clipPath></defs>
+      <g id="g-fills"></g>
+      <g id="g-outer"></g>
+      <g id="g-links"></g>
+      <g id="g-hubs"></g>
+      <g id="g-nodes"></g>
+    </svg>
+    <div class="school-tooltip" id="school-tooltip"></div>
+  </div>
+
+  <div class="side-panel">
+    <div class="sp-head"><h3>Kooperationen (<span id="cnt">6</span>)</h3></div>
+    <div class="coop-list" id="coop-list"></div>
+  </div>
+</div>
+
+<div class="detail-panel">
+  <div class="detail-empty" id="ib-empty">↑ Klicke auf eine Kooperation in der Liste oder auf der Karte für Details</div>
+  <div id="ib-content" style="display:none"></div>
+</div>
+
+<script>
+const COOPS = [{"id": "bochum-dq", "name": "RBZ Bochum – Doppelqualifizierung (DQ)", "bezirk": "Arnsberg", "anlage": "A", "typ": "Dachverbund mit Zusatzangebot", "status": "teilweise", "statusLabel": "3 von 5 PoK eingereicht", "bildungsgang": "Anlage A (versch. Ausbildungsberufe) + gemeinsamer DQ-Kurs zur Fachhochschulreife", "beschreibung": "Fünf Bochumer Berufskollegs bündeln ihre dual Auszubildenden in einem gemeinsamen Doppelqualifizierungs-Kurs zur Fachhochschulreife. Federführend (faktisch) das Louis-Baare-Berufskolleg.", "distanz": "20% Distanz / 80% Präsenz, synchron", "hub": {"name": "DQ-Kurs RBZ Bochum", "lat": 51.478, "lng": 7.222}, "schools": [{"name": "Louis-Baare-Berufskolleg", "ort": "Bochum", "lat": 51.483, "lng": 7.208, "eingereicht": true}, {"name": "Klaus-Steilmann-Berufskolleg", "ort": "Bochum", "lat": 51.47, "lng": 7.235, "eingereicht": true}, {"name": "Alice-Salomon-Berufskolleg", "ort": "Bochum", "lat": 51.49, "lng": 7.198, "eingereicht": true}, {"name": "Technische Berufsschule 1", "ort": "Bochum", "lat": 51.465, "lng": 7.245, "eingereicht": false}, {"name": "Walter-Gropius-Berufskolleg", "ort": "Bochum", "lat": 51.495, "lng": 7.25, "eingereicht": false}]}, {"id": "siegen-menden-unna", "name": "Schulversuch Technische*r Produktdesigner*in (MAK)", "bezirk": "Arnsberg", "anlage": "A", "typ": "Schulversuch zur Vermeidung Fachklasse", "status": "teilweise", "statusLabel": "2 von 3 PoK eingereicht", "bildungsgang": "Anlage A – Techn. Produktdesigner*in, FR Maschinen- und Anlagenkonstruktion (MAK)", "beschreibung": "Drei Berufskollegs mit jeweils zu wenigen Azubis in dieser Fachrichtung unterrichten sich ab dem 3. Ausbildungsjahr im Wechsel per Distanzunterricht, um eine zentrale Bezirksfachklasse zu vermeiden.", "distanz": "1 Berufsschultag/Woche im Wechsel, + 3 Wochen Blockunterricht/Jahr in Unna", "hub": {"name": "Schulversuch TPD/MAK", "lat": 51.3, "lng": 7.83}, "schools": [{"name": "Berufskolleg Technik Siegen-Wittgenstein", "ort": "Siegen", "lat": 50.875, "lng": 8.024, "eingereicht": true}, {"name": "Hönne-Berufskolleg Menden", "ort": "Menden", "lat": 51.432, "lng": 7.794, "eingereicht": true}, {"name": "Hellweg-Berufskolleg Unna", "ort": "Unna", "lat": 51.538, "lng": 7.689, "eingereicht": false}]}, {"id": "lippstadt-soest", "name": "Friseur*in-Kooperation Lippstadt–Soest", "bezirk": "Arnsberg", "anlage": "A", "typ": "Schulversuch zur Vermeidung Fachklasse", "status": "teilweise", "statusLabel": "1 von 2 PoK eingereicht", "bildungsgang": "Anlage A – Friseur*in, 2. Ausbildungsjahr", "beschreibung": "Bei geringen Schülerzahlen am Lippe-BK Lippstadt unterrichtet eine Lehrkraft des Börde-BK Soest die Lernenden zeitgleich auf Distanz mit, während sie ihre eigene Präsenzklasse unterrichtet.", "distanz": "1 Doppelstunde/Woche, 20% des Unterrichtsumfangs (nur 2. Ausbildungsjahr)", "hub": null, "schools": [{"name": "Lippe-Berufskolleg Lippstadt", "ort": "Lippstadt", "lat": 51.673, "lng": 8.353, "eingereicht": true}, {"name": "Börde-Berufskolleg Soest", "ort": "Soest", "lat": 51.572, "lng": 8.108, "eingereicht": false}]}, {"id": "halle-fhr", "name": "Berufsausbildung + Fachhochschulreife (BA+FHR)", "bezirk": "Detmold", "anlage": "A", "typ": "Dachverbund mit Zusatzangebot", "status": "teilweise", "statusLabel": "1 von 5 PoK eingereicht", "bildungsgang": "Anlage A (kaufmännische Berufe) + synchroner Distanzunterricht zur FHR", "beschreibung": "Wachsende Kooperation: 2024 mit 2 Schulen gestartet, ab 2025/26 auf 5 Standorte erweitert. Kaufmännische Azubis erwerben zusätzlich zur dualen Ausbildung die Fachhochschulreife.", "distanz": "4–5 Wochenstunden synchroner Distanzunterricht (Deutsch, Mathematik, Englisch, Naturwissenschaft)", "hub": {"name": "BA+FHR-Kooperation", "lat": 51.92, "lng": 8.62}, "schools": [{"name": "Berufskolleg Halle (Westf.)", "ort": "Halle (Westf.)", "lat": 52.053, "lng": 8.358, "eingereicht": true}, {"name": "HANSE-Berufskolleg Lemgo", "ort": "Lemgo", "lat": 52.027, "lng": 8.9, "eingereicht": false}, {"name": "Carl-Severing-Berufskolleg (CSBWV)", "ort": "Bielefeld", "lat": 52.012, "lng": 8.512, "eingereicht": false}, {"name": "Ludwig-Erhard-Berufskolleg", "ort": "Paderborn", "lat": 51.715, "lng": 8.745, "eingereicht": false}, {"name": "Rudolf-Rempel-Berufskolleg", "ort": "Bielefeld", "lat": 52.028, "lng": 8.548, "eingereicht": false}]}, {"id": "warburg-hoexter", "name": "Schulversuch RBZ Kreis Höxter", "bezirk": "Detmold", "anlage": "A", "typ": "Schulversuch zur Vermeidung Fachklasse", "status": "schwach", "statusLabel": "1 von 2 PoK eingereicht · Inhalte unvollständig", "bildungsgang": "Anlage A – Kaufmann/-frau im Einzelhandel + Industriemechaniker*in", "beschreibung": "Zwei kreiseigene Berufskollegs kooperieren in zwei unterschiedlichen Ausbildungsberufen. Das vorliegende PoK verweist fast durchgängig nur auf ein externes, nicht vorliegendes Dokument „Schulversuch RBZ“ – Distanzanteil und Organisationslogik bleiben unklar.", "distanz": "k. A. – im PoK nicht spezifiziert (Verweis auf fehlendes Referenzdokument)", "hub": null, "schools": [{"name": "Johann-Conrad-Schlaun-Berufskolleg", "ort": "Warburg", "lat": 51.489, "lng": 9.146, "eingereicht": true}, {"name": "Berufskolleg des Kreises Höxter", "ort": "Höxter", "lat": 51.772, "lng": 9.397, "eingereicht": false}]}, {"id": "oberhausen-hybrid", "name": "Fachschule Technik – Hybridverbund (MTB)", "bezirk": "Düsseldorf", "anlage": "E", "typ": "Hybridkooperation (in Planung)", "status": "vollstaendig", "statusLabel": "3 von 3 PoK eingereicht · Start 2026/27", "bildungsgang": "Anlage E – Fachschule für Technik, FR Maschinenbautechnik (Vollzeit)", "beschreibung": "Drei Standorte mit rückläufigen Schülerzahlen unterrichten sich ab 2026/27 gegenseitig per dauerhafter Videoverbindung (Hybrid, kein klassischer Distanzunterricht). Erste vollständig dokumentierte Kooperation aller Partnerschulen.", "distanz": "Hybrid: 50% Präsenz / 50% Video-Zuschaltung, kein klassischer Distanzunterricht", "hub": {"name": "Hybridverbund FS-MTB", "lat": 51.3, "lng": 7.02}, "schools": [{"name": "Hans-Sachs-Berufskolleg", "ort": "Oberhausen", "lat": 51.474, "lng": 6.851, "eingereicht": true}, {"name": "Berufskolleg Werther Brücke", "ort": "Wuppertal", "lat": 51.256, "lng": 7.15, "eingereicht": true}, {"name": "Technisches Berufskolleg Solingen", "ort": "Solingen", "lat": 51.171, "lng": 7.084, "eingereicht": true}]}];
+
+const ANLAGE_COLOR = { A: '#003064', E: '#175E54' };
+const STATUS_COLOR = { vollstaendig: '#009036', teilweise: '#E2001A', schwach: '#999' };
+
+function geoToSVG(lat, lng) {
+  const x = (lng - 5.86) / (9.46 - 5.86) * 660 + 20;
+  const y = (52.53 - lat) / (52.53 - 50.32) * 540 + 15;
+  return { x: Math.round(x*10)/10, y: Math.round(y*10)/10 };
+}
+
+// Bezirk paths (manually calibrated)
+const NRW_OUTER = "M 583.7,17 L 570.7,13 L 550.9,41.6 L 511,43.5 L 508.3,12.8 L 499.9,6.1 L 475.3,11.4 L 462.7,30.3 L 440.1,28.4 L 445,40 L 465,50 L 463.6,70.6 L 475,95 L 460,110 L 435,110 L 420,125 L 385,130 L 375,120 L 390,110 L 390,100 L 375,90 L 375,70 L 385,60 L 370,50 L 355,50 L 340,40 L 335,30 L 320,25 L 310,30 L 315,45 L 290,60 L 265,75 L 235,75 L 210,85 L 190,105 L 170,115 L 155,130 L 180,150 L 166.2,162.5 L 160,170 L 125,180 L 105,180 L 105,195 L 70,175 L 55,170 L 55,185 L 40,180 L 20,185 L 25,210 L 35,225 L 50,230 L 45,245 L 70,275 L 65,310 L 40,340 L 45,355 L 60,350 L 60,360 L 20,385 L 5,380 L 5,400 L 30,405 L 35,415 L 45,415 L 45,430 L 35,435 L 25,445 L 35,470 L 50,470 L 75,495 L 65,510 L 75,525 L 90,520 L 95,535 L 100,555 L 120,560 L 140,550 L 160,560 L 175,555 L 175,530 L 195,530 L 200,515 L 225,495 L 280,485 L 285,465 L 335,450 L 350,420 L 360,410 L 370,425 L 390,435 L 395,460 L 410,470 L 425,470 L 430,460 L 425,445 L 450,425 L 465,430 L 475,410 L 490,385 L 490,370 L 520,365 L 530,340 L 525,325 L 505,330 L 495,320 L 505,310 L 520,300 L 550,295 L 565,285 L 555,270 L 575,260 L 585,265 L 590,275 L 600,280 L 615,270 L 640,278 L 648,262 L 672,265 L 660,255 L 670,238 L 692,240 L 682,228 L 696,212 L 680,200 L 692,188 L 678,172 L 662,160 L 650,170 L 638,158 L 615,155 L 615,145 L 596.4,142.9 L 600,120 L 590,115 L 590,100 L 572.8,103.6 L 570,85 L 575,75 L 560,70 L 565,60 L 579.9,48.8 Z";
+const BEZIRKE = {
+  "Münster": "M 275,265 L 255,255 L 235,270 L 210,265 L 195,270 L 180,250 L 195,215 L 165,210 L 145,195 L 130,195 L 105,195 L 105,180 L 125,180 L 160,170 L 180,150 L 155,130 L 170,115 L 190,105 L 210,85 L 235,75 L 265,75 L 282.5,67.5 L 315,45 L 310,30 L 320,25 L 335,30 L 340,40 L 355,50 L 370,50 L 385,60 L 375,70 L 375,85 L 390,100 L 390,110 L 375,120 L 385,130 L 405,125 L 405,140 L 450,215 L 445,225 L 430,230 L 430,220 L 415,215 L 385,215 L 370,215 L 360,210 L 340,215 L 310,225 L 300,215 L 290,215 L 295,235 L 275,250 Z",
+  "Detmold": "M 405,130 L 420,125 L 435,110 L 460,110 L 475,95 L 465,70 L 465,50 L 445,40 L 440,30 L 465,30 L 475,10 L 500,5 L 510,15 L 510,45 L 550,40 L 570,15 L 585,15 L 580,50 L 565,60 L 560,70 L 575,75 L 570,85 L 575,105 L 590,100 L 590,115 L 600,120 L 595,145 L 615,145 L 615,155 L 625,160 L 638,158 L 650,170 L 662,160 L 678,172 L 692,188 L 680,200 L 696,212 L 682,228 L 692,240 L 670,238 L 660,255 L 672,265 L 648,262 L 640,278 L 615,270 L 600,280 L 590,275 L 585,265 L 575,260 L 565,265 L 550,250 L 540,255 L 545,265 L 530,275 L 510,270 L 490,275 L 480,250 L 495,235 L 495,225 L 480,225 L 480,210 L 450,215 L 445,205 L 405,140 Z",
+  "Arnsberg": "M 445,225 L 450,215 L 480,210 L 480,225 L 495,225 L 495,235 L 480,250 L 490,275 L 510,270 L 530,275 L 545,265 L 540,255 L 550,250 L 565,265 L 555,270 L 565,285 L 555,295 L 520,300 L 495,320 L 510,330 L 525,325 L 530,340 L 520,365 L 490,370 L 490,385 L 465,430 L 450,425 L 425,445 L 430,460 L 425,470 L 410,470 L 395,460 L 390,435 L 370,425 L 360,410 L 355,400 L 345,390 L 340,375 L 325,380 L 320,370 L 305,365 L 285,340 L 265,335 L 260,315 L 245,320 L 235,295 L 235,270 L 255,255 L 275,265 L 275,250 L 295,235 L 290,215 L 300,215 L 310,225 L 360,210 L 370,215 L 415,215 L 430,220 L 430,230 Z",
+  "Düsseldorf": "M 40,180 L 55,185 L 55,170 L 105,195 L 145,195 L 165,210 L 195,215 L 180,250 L 195,270 L 210,265 L 235,270 L 235,295 L 245,320 L 260,315 L 265,335 L 270,355 L 265,360 L 245,355 L 245,365 L 235,365 L 215,365 L 215,375 L 200,380 L 185,375 L 170,385 L 160,395 L 135,390 L 115,385 L 110,375 L 95,370 L 75,350 L 70,355 L 60,350 L 45,355 L 40,340 L 65,310 L 70,275 L 45,245 L 50,230 L 35,225 L 25,210 L 20,185 Z",
+  "Köln": "M 215,375 L 215,365 L 245,365 L 245,355 L 265,360 L 270,355 L 265,335 L 285,340 L 305,365 L 320,370 L 325,380 L 340,375 L 345,390 L 355,400 L 360,415 L 350,420 L 335,450 L 285,465 L 280,485 L 225,495 L 200,515 L 195,530 L 175,530 L 175,555 L 160,560 L 140,550 L 120,560 L 100,555 L 90,520 L 75,525 L 65,510 L 75,495 L 50,470 L 35,470 L 25,445 L 35,435 L 45,430 L 45,415 L 35,415 L 30,405 L 5,400 L 5,380 L 20,385 L 60,360 L 60,350 L 70,355 L 75,350 L 95,370 L 110,375 L 115,385 L 160,395 L 170,385 L 185,375 L 200,380 Z"
+};
+const BEZ_FILL  = { "Münster": "#eef4ee", "Detmold": "#e8edf5", "Arnsberg": "#f3f0ea", "Düsseldorf": "#f6eeec", "Köln": "#f3eaee" };
+const BEZ_LABELPOS = { "Münster": [220,145], "Detmold": [520,160], "Arnsberg": [430,340], "Düsseldorf": [110,300], "Köln": [190,460] };
+
+let activeAnlage = 'alle';
+let selectedCoop = null;
+
+function init() {
+  renderKPIs();
+  document.getElementById('clipPath1').setAttribute('d', NRW_OUTER);
+  const gf = document.getElementById('g-fills');
+  for (const name in BEZIRKE) {
+    const p = mk('path');
+    p.setAttribute('d', BEZIRKE[name]);
+    p.setAttribute('fill', BEZ_FILL[name]);
+    p.setAttribute('stroke', 'white'); p.setAttribute('stroke-width','1.8'); p.setAttribute('stroke-linejoin','round');
+    p.setAttribute('clip-path','url(#clip1)');
+    gf.appendChild(p);
+    const [lx,ly] = BEZ_LABELPOS[name];
+    const t = mk('text'); t.setAttribute('class','bezirk-label'); t.setAttribute('x',lx); t.setAttribute('y',ly);
+    t.textContent = name.toUpperCase(); gf.appendChild(t);
+  }
+  const outer = mk('path'); outer.setAttribute('d', NRW_OUTER);
+  outer.setAttribute('fill','none'); outer.setAttribute('stroke','#8a8070'); outer.setAttribute('stroke-width','2');
+  document.getElementById('g-outer').appendChild(outer);
+
+  renderCoopList();
+  renderMap();
+}
+
+function renderKPIs() {
+  const totalCoops = COOPS.length;
+  const totalSchools = new Set(COOPS.flatMap(c => c.schools.map(s => s.name + s.ort))).size;
+  const anlageA = COOPS.filter(c => c.anlage === 'A').length;
+  const anlageE = COOPS.filter(c => c.anlage === 'E').length;
+  const vollstaendig = COOPS.filter(c => c.status === 'vollstaendig').length;
+  const bezirke = new Set(COOPS.map(c => c.bezirk)).size;
+
+  const kpis = [
+    { num: totalCoops, label: 'Kooperationen gesamt', cls: '' },
+    { num: totalSchools, label: 'beteiligte Berufskollegs', cls: 'teal' },
+    { num: anlageA, label: 'Anlage A (duale Ausbildung)', cls: '' },
+    { num: anlageE, label: 'Anlage E (Fachschule)', cls: 'teal' },
+    { num: vollstaendig, label: 'vollständig dokumentiert', cls: 'green' },
+  ];
+  document.getElementById('kpi-row').innerHTML = kpis.map(k =>
+    `<div class="kpi-card ${k.cls}"><div class="kpi-num">${k.num}</div><div class="kpi-label">${k.label}</div></div>`
+  ).join('');
+}
+
+function mk(tag){ return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+
+document.getElementById('svg').addEventListener('mousemove', moveTip);
+
+function visibleCoops() {
+  return COOPS.filter(c => activeAnlage === 'alle' || c.anlage === activeAnlage);
+}
+
+function renderCoopList() {
+  const list = document.getElementById('coop-list');
+  list.innerHTML = '';
+  const vis = visibleCoops();
+  document.getElementById('cnt').textContent = vis.length;
+  vis.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'coop-item' + (selectedCoop === c.id ? ' sel' : '');
+    div.style.borderLeftColor = ANLAGE_COLOR[c.anlage];
+    div.innerHTML = `
+      <div class="ci-name">${c.name}</div>
+      <div class="ci-meta">${c.bezirk} · Anlage ${c.anlage} · ${c.schools.length} Schulen</div>
+      <span class="ci-status" style="background:${STATUS_COLOR[c.status]}22;color:${STATUS_COLOR[c.status]}">${c.statusLabel}</span>
+    `;
+    div.addEventListener('click', () => selectCoop(c.id));
+    list.appendChild(div);
+  });
+}
+
+function makeTriangle(cx, cy, size) {
+  // Upward-pointing triangle centered on cx,cy
+  const h = size * 1.1;
+  const pts = [
+    `${cx},${cy - h}`,
+    `${cx - size},${cy + h * 0.5}`,
+    `${cx + size},${cy + h * 0.5}`
+  ].join(' ');
+  const tri = mk('polygon');
+  tri.setAttribute('points', pts);
+  return tri;
+}
+
+function addHubTriangle(gHubs, cx, cy, col, coop) {
+  const hg = mk('g'); hg.setAttribute('class','hub-node'); hg.dataset.coop = coop.id;
+  const tri = makeTriangle(cx, cy, 9);
+  tri.setAttribute('fill', col); tri.setAttribute('stroke','white'); tri.setAttribute('stroke-width','2');
+  tri.setAttribute('stroke-linejoin','round');
+  hg.appendChild(tri);
+  hg.addEventListener('mouseenter', e => showHubTip(coop, e));
+  hg.addEventListener('mousemove', moveTip);
+  hg.addEventListener('mouseleave', hideTip);
+  hg.addEventListener('click', () => selectCoop(coop.id));
+  gHubs.appendChild(hg);
+}
+
+function renderMap() {
+  const gLinks = document.getElementById('g-links');
+  const gHubs  = document.getElementById('g-hubs');
+  const gNodes = document.getElementById('g-nodes');
+  gLinks.innerHTML = ''; gHubs.innerHTML = ''; gNodes.innerHTML = '';
+
+  const vis = visibleCoops();
+
+  vis.forEach(c => {
+    const col = ANLAGE_COLOR[c.anlage];
+    if (c.hub) {
+      const hubPos = geoToSVG(c.hub.lat, c.hub.lng);
+      // links from each school to hub
+      c.schools.forEach(s => {
+        const sp = geoToSVG(s.lat, s.lng);
+        const line = mk('line');
+        line.setAttribute('x1', sp.x); line.setAttribute('y1', sp.y);
+        line.setAttribute('x2', hubPos.x); line.setAttribute('y2', hubPos.y);
+        line.setAttribute('stroke', col); line.setAttribute('stroke-width','1.6'); line.setAttribute('stroke-opacity','.55');
+        line.setAttribute('class','link-line'); line.dataset.coop = c.id;
+        gLinks.appendChild(line);
+      });
+      // hub triangle
+      addHubTriangle(gHubs, hubPos.x, hubPos.y, col, c);
+    } else {
+      // direct pair line
+      const a = geoToSVG(c.schools[0].lat, c.schools[0].lng);
+      const b = geoToSVG(c.schools[1].lat, c.schools[1].lng);
+      const line = mk('line');
+      line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+      line.setAttribute('stroke', col); line.setAttribute('stroke-width','1.6'); line.setAttribute('stroke-opacity','.55');
+      line.setAttribute('class','link-line'); line.dataset.coop = c.id;
+      gLinks.appendChild(line);
+      // triangle at midpoint of the pair line
+      const mx = Math.round((a.x + b.x) / 2 * 10) / 10;
+      const my = Math.round((a.y + b.y) / 2 * 10) / 10;
+      addHubTriangle(gHubs, mx, my, col, c);
+    }
+
+    c.schools.forEach(s => {
+      const sp = geoToSVG(s.lat, s.lng);
+      const g = mk('g'); g.setAttribute('class','school-node'); g.dataset.coop = c.id;
+      const circle = mk('circle');
+      circle.setAttribute('cx', sp.x); circle.setAttribute('cy', sp.y); circle.setAttribute('r','7');
+      circle.setAttribute('fill', s.eingereicht ? '#009036' : '#E2001A');
+      circle.setAttribute('stroke','white'); circle.setAttribute('stroke-width','2');
+      g.appendChild(circle);
+      g.addEventListener('mouseenter', e => showTip(s, c, e));
+      g.addEventListener('mousemove', moveTip);
+      g.addEventListener('mouseleave', hideTip);
+      g.addEventListener('click', () => selectCoop(c.id));
+      gNodes.appendChild(g);
+    });
+  });
+}
+
+function showTip(school, coop, evt) {
+  const tip = document.getElementById('school-tooltip');
+  tip.innerHTML = school.name + '<div class="tt-ort">' + school.ort + (school.eingereicht ? ' · PoK eingereicht' : ' · PoK ausstehend') + '</div>';
+  tip.style.display = 'block';
+  moveTip(evt);
+}
+function hideTip() {
+  document.getElementById('school-tooltip').style.display = 'none';
+}
+function showHubTip(coop, evt) {
+  const tip = document.getElementById('school-tooltip');
+  tip.innerHTML = coop.hub.name + '<div class="tt-ort">Gemeinsamer Knotenpunkt · ' + coop.schools.length + ' Schulen</div>';
+  tip.style.display = 'block';
+  moveTip(evt);
+}
+function moveTip(evt) {
+  const tip = document.getElementById('school-tooltip');
+  if (tip.style.display !== 'block') return;
+  tip.style.left = (evt.clientX + 14) + 'px';
+  tip.style.top = (evt.clientY - 8) + 'px';
+}
+
+function selectCoop(id) {
+  selectedCoop = id;
+  const c = COOPS.find(x => x.id === id);
+  document.querySelectorAll('.coop-item').forEach(el => el.classList.remove('sel'));
+  renderCoopList();
+  document.querySelectorAll('.link-line').forEach(l => {
+    l.classList.toggle('dim', l.dataset.coop !== id);
+  });
+  document.querySelectorAll('.school-node, .hub-node').forEach(n => {
+    n.classList.toggle('dim', n.dataset.coop !== id);
+  });
+  showInfo(c);
+}
+
+function showInfo(c) {
+  document.getElementById('ib-empty').style.display = 'none';
+  const box = document.getElementById('ib-content');
+  box.style.display = 'block';
+  const col = ANLAGE_COLOR[c.anlage];
+  box.innerHTML = `
+    <div class="ib-tags">
+      <span class="ib-tag" style="background:${col}">Anlage ${c.anlage}</span>
+      <span class="ib-tag" style="background:#555">${c.typ}</span>
+      <span class="ib-tag" style="background:${STATUS_COLOR[c.status]}">${c.statusLabel}</span>
+    </div>
+    <div class="ib-title">${c.name}</div>
+    <div class="ib-meta">${c.bezirk} · ${c.bildungsgang}</div>
+    <div class="ib-desc">${c.beschreibung}<br><strong>Distanzumfang:</strong> ${c.distanz}</div>
+    <div class="ib-schools">
+      ${c.schools.map(s => `<span class="ib-school-tag"><span class="${s.eingereicht?'check':'pend'}">${s.eingereicht?'✓':'○'}</span>${s.name} (${s.ort})</span>`).join('')}
+    </div>
+  `;
+}
+
+function setAnlage(a, btn) {
+  activeAnlage = a;
+  document.querySelectorAll('.filter-pill').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  selectedCoop = null;
+  document.getElementById('ib-empty').style.display = 'block';
+  document.getElementById('ib-content').style.display = 'none';
+  renderCoopList();
+  renderMap();
+}
+
+init();
+</script>
+</body>
+</html>
