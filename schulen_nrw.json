@@ -1,0 +1,12 @@
+[
+  { "name": "Richard-von-Weizsäcker-BK Paderborn", "ort": "Paderborn", "bezirk": "Detmold", "lat": 51.72, "lng": 8.74 },
+  { "name": "Berufskolleg Bielefeld-Senne", "ort": "Bielefeld", "bezirk": "Detmold", "lat": 52.02, "lng": 8.52 },
+  { "name": "BK Technik Münster", "ort": "Münster", "bezirk": "Münster", "lat": 51.96, "lng": 7.63 },
+  { "name": "Lippe-Berufskolleg Detmold", "ort": "Detmold", "bezirk": "Detmold", "lat": 51.93, "lng": 8.88 },
+  { "name": "Kaufmännische Schulen Dortmund", "ort": "Dortmund", "bezirk": "Arnsberg", "lat": 51.52, "lng": 7.47 },
+  { "name": "Wirtschaftskolleg Düsseldorf", "ort": "Düsseldorf", "bezirk": "Düsseldorf", "lat": 51.22, "lng": 6.78 },
+  { "name": "Gesundheits-BK Köln", "ort": "Köln", "bezirk": "Köln", "lat": 50.94, "lng": 6.96 },
+  { "name": "Sozial-BK Aachen", "ort": "Aachen", "bezirk": "Köln", "lat": 50.77, "lng": 6.09 },
+  { "name": "Friedrich-List-BK Bonn", "ort": "Bonn", "bezirk": "Köln", "lat": 50.73, "lng": 7.10 },
+  { "name": "Städt. BK Wuppertal", "ort": "Wuppertal", "bezirk": "Düsseldorf", "lat": 51.26, "lng": 7.15 }
+]

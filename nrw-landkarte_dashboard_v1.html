@@ -135,12 +135,11 @@ function checkPw() {
   .hub-node:hover polygon { filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
   .school-node circle { filter: drop-shadow(0 1px 3px rgba(0,0,0,.25)); transition: all .15s; cursor: pointer; }
   .school-node:hover circle, .school-node.hl circle { r: 9; }
-  .school-node.dim circle { opacity: .06; filter: blur(1px); }
-  .hub-node.dim polygon { opacity: .06; filter: blur(1px); }
-  .school-node.dim, .hub-node.dim { pointer-events: none; }
-  .link-line { stroke-dasharray: 5 3; animation: dash 18s linear infinite; transition: opacity .2s; }
+  .school-node.dim circle { opacity: .2; }
+  .hub-node.dim polygon { opacity: .2; }
+  .link-line { stroke-dasharray: 5 3; animation: dash 18s linear infinite; }
   @keyframes dash { to { stroke-dashoffset: -160; } }
-  .link-line.dim { opacity: .04; }
+  .link-line.dim { opacity: .1; }
 
   .side-panel { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); display: flex; flex-direction: column; height: 640px; overflow: hidden; }
   .sp-head { padding: 16px 18px; border-bottom: 1px solid var(--border); }
@@ -155,14 +154,13 @@ function checkPw() {
 
   .detail-panel { grid-column: 1/-1; background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07); padding: 20px 26px; margin: 0 32px 28px; }
   .detail-empty { color: var(--muted); font-style: italic; text-align: center; padding: 30px; }
-  .ib-title { font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .ib-title { font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 5px; }
   .ib-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
-  .ib-desc { font-size: 12.5px; line-height: 1.65; margin-bottom: 10px; color: var(--text); border-left: 3px solid var(--border); padding-left: 10px; }
-  .ib-distanz { font-size: 12px; color: var(--text); margin-bottom: 10px; }
-  .ib-distanz-lbl { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-right: 8px; }
-  .ib-lbl { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .ib-schools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-  .ib-school-tag { font-size: 11.5px; padding: 5px 11px; border-radius: 20px; background: #eef2f8; color: var(--navy); font-weight: 600; border: 1px solid #d0daea; }
+  .ib-desc { font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+  .ib-schools { display: flex; flex-wrap: wrap; gap: 7px; }
+  .ib-school-tag { font-size: 11.5px; padding: 5px 11px; border-radius: 20px; background: var(--gray); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .ib-school-tag .check { color: var(--green); font-weight: 800; }
+  .ib-school-tag .pend { color: var(--red); font-weight: 800; }
   .ib-tags { display:flex; gap:7px; margin-bottom:10px; flex-wrap:wrap; }
   .ib-tag { font-size: 10.5px; font-weight: 700; padding: 4px 11px; border-radius: 20px; color: white; }
 
@@ -178,7 +176,7 @@ function checkPw() {
 <header>
   <div>
     <div class="htitle">PoK-Kooperationsdashboard NRW</div>
-    <div class="hsub">Schulübergreifende Distanz-/Hybridkooperationen · AP 1.6 · Stand August 2026</div>
+    <div class="hsub">Schulübergreifende Distanz-/Hybridkooperationen · AP 1.6 · Stand Juni 2026</div>
   </div>
   <div class="logo">DigGS.NRW</div>
 </header>
@@ -192,11 +190,6 @@ function checkPw() {
       <button class="filter-pill active" data-anlage="alle" onclick="setAnlage('alle',this)">Alle</button>
       <button class="filter-pill" data-anlage="A" onclick="setAnlage('A',this)">Anlage A</button>
       <button class="filter-pill" data-anlage="E" onclick="setAnlage('E',this)">Anlage E</button>
-      <span style="display:flex;align-items:center;gap:14px;margin-left:12px;font-size:11px;font-weight:700;color:var(--muted)">
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#009036;display:inline-block"></span>PoK eingereicht</span>
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#E87722;display:inline-block"></span>Nachreichung angekündigt</span>
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#E2001A;display:inline-block"></span>PoK ausstehend</span>
-      </span>
     </div>
     <svg id="svg" viewBox="0 0 700 580" xmlns="http://www.w3.org/2000/svg">
       <defs><clipPath id="clip1"><path id="clipPath1"/></clipPath></defs>
@@ -221,128 +214,10 @@ function checkPw() {
 </div>
 
 <script>
-const COOPS = [
-  {
-    "id": "bochum-dq",
-    "name": "Kooperation Doppelqualifizierung (DQ)",
-    "bezirk": "Arnsberg", "anlage": "A",
-    "typ": "Gemeinsames Zusatzangebot",
-    "status": "teilweise", "statusLabel": "3 von 5 PoK eingereicht",
-    "bildungsgang": "Anlage A – verschiedene Ausbildungsberufe",
-    "beschreibung": "Fünf Berufskollegs des Regionalen Bildungszentrums (RBZ) Bochum bieten gemeinsam einen schulübergreifenden DQ-Kurs an, in dem Auszubildende unterschiedlicher Berufe parallel zur dualen Ausbildung die Fachhochschulreife erwerben können. Die Organisation der Kooperation wird zentral vom Louis-Baare-Berufskolleg koordiniert.",
-    "distanz": "20 % Distanzunterricht / 80 % Präsenz, synchron",
-    "hub": {"name":"DQ-Kurs RBZ Bochum","lat":51.478,"lng":7.222},
-    "schools": [
-      {"name":"Louis-Baare-Berufskolleg","ort":"Bochum","lat":51.483,"lng":7.208,"eingereicht":"ja"},
-      {"name":"Klaus-Steilmann-Berufskolleg","ort":"Bochum","lat":51.470,"lng":7.235,"eingereicht":"ja"},
-      {"name":"Alice-Salomon-Berufskolleg","ort":"Bochum","lat":51.490,"lng":7.198,"eingereicht":"ja"},
-      {"name":"Technische Berufsschule 1","ort":"Bochum","lat":51.465,"lng":7.245,"eingereicht":"angekuendigt"},
-      {"name":"Walter-Gropius-Berufskolleg","ort":"Bochum","lat":51.495,"lng":7.250,"eingereicht":"angekuendigt"}
-    ]
-  },
-  {
-    "id": "siegen-menden-unna",
-    "name": "Kooperation Techn. Produktdesigner*in – Maschinen- und Anlagenkonstruktion (MAK)",
-    "bezirk": "Arnsberg", "anlage": "A",
-    "typ": "Schulversuch: Gemeinsamer Fachunterricht",
-    "status": "teilweise", "statusLabel": "2 von 3 PoK eingereicht",
-    "bildungsgang": "Anlage A – Technische*r Produktdesigner*in, FR Maschinen- und Anlagenkonstruktion",
-    "beschreibung": "Im Rahmen eines offiziellen Schulversuchs kooperieren drei Berufskollegs ab dem 3. Ausbildungsjahr: Da jede Schule zu wenige Auszubildende in dieser Fachrichtung hat, unterrichten sich die Schulen im wöchentlichen Wechsel gegenseitig per Distanzunterricht. Ergänzend findet jährlich ein dreiwöchiger Präsenz-Blockunterricht statt.",
-    "distanz": "1 Berufsschultag/Woche im Wechsel + 3 Wochen Blockunterricht/Jahr",
-    "hub": {"name":"Schulversuch TPD/MAK","lat":51.30,"lng":7.83},
-    "schools": [
-      {"name":"BK Technik des Kreises Siegen-Wittgenstein","ort":"Siegen","lat":50.875,"lng":8.024,"eingereicht":"ja"},
-      {"name":"Hönne-Berufskolleg","ort":"Menden","lat":51.432,"lng":7.794,"eingereicht":"ja"},
-      {"name":"Hellweg-Berufskolleg","ort":"Unna","lat":51.538,"lng":7.689,"eingereicht":"angekuendigt"}
-    ]
-  },
-  {
-    "id": "lippstadt-soest",
-    "name": "Kooperation Friseur*in",
-    "bezirk": "Arnsberg", "anlage": "A",
-    "typ": "Schulversuch: Gemeinsamer Fachunterricht",
-    "status": "teilweise", "statusLabel": "1 von 2 PoK eingereicht",
-    "bildungsgang": "Anlage A – Friseur*in, 2. Ausbildungsjahr",
-    "beschreibung": "Das Lippe-Berufskolleg Lippstadt und das Börde-Berufskolleg Soest kooperieren im 2. Ausbildungsjahr, um trotz geringer Schülerzahlen einen qualitativ hochwertigen Fachunterricht sicherzustellen. Eine Lehrkraft des Börde-BK unterrichtet dabei zeitgleich ihre eigene Präsenzklasse in Soest und die Auszubildenden in Lippstadt per Distanzunterricht.",
-    "distanz": "Ca. 20 % des Unterrichtsumfangs, 1 Doppelstunde/Woche",
-    "hub": null,
-    "schools": [
-      {"name":"Lippe-Berufskolleg","ort":"Lippstadt","lat":51.673,"lng":8.353,"eingereicht":"ja"},
-      {"name":"Börde-Berufskolleg","ort":"Soest","lat":51.572,"lng":8.108,"eingereicht":"angekuendigt"}
-    ]
-  },
-  {
-    "id": "csbwv-fhr",
-    "name": "Kooperation Berufsausbildung + Fachhochschulreife (BA+FHR)",
-    "bezirk": "Detmold", "anlage": "A",
-    "typ": "Gemeinsames Zusatzangebot",
-    "status": "teilweise", "statusLabel": "3 von 5 PoK eingereicht",
-    "bildungsgang": "Anlage A – kaufmännische Ausbildungsberufe",
-    "beschreibung": "Fünf Berufskollegs im Regierungsbezirk Detmold ermöglichen kaufmännischen Auszubildenden, parallel zur dualen Ausbildung die Fachhochschulreife zu erwerben. Die Kooperation startete 2024 mit zwei Schulen und wurde ab dem Schuljahr 2025/26 auf fünf Standorte ausgeweitet. Koordiniert wird die Kooperation durch das Carl-Severing-Berufskolleg für Wirtschaft und Verwaltung (CSBWV) Bielefeld.",
-    "distanz": "4–5 Wochenstunden synchroner Distanzunterricht (Deutsch, Mathematik, Englisch, Naturwissenschaft)",
-    "hub": {"name":"BA+FHR-Kooperation","lat":52.02,"lng":8.52},
-    "schools": [
-      {"name":"Carl-Severing-BK f. Wirtschaft u. Verwaltung (CSBWV)","ort":"Bielefeld","lat":52.022,"lng":8.530,"eingereicht":"angekuendigt"},
-      {"name":"HANSE-Berufskolleg","ort":"Lemgo","lat":52.027,"lng":8.900,"eingereicht":"ja"},
-      {"name":"Berufskolleg Halle (Westf.)","ort":"Halle (Westf.)","lat":52.053,"lng":8.358,"eingereicht":"ja"},
-      {"name":"Ludwig-Erhard-Berufskolleg","ort":"Paderborn","lat":51.715,"lng":8.745,"eingereicht":"angekuendigt"},
-      {"name":"Rudolf-Rempel-Berufskolleg","ort":"Bielefeld","lat":52.028,"lng":8.548,"eingereicht":"ja"}
-    ]
-  },
-  {
-    "id": "warburg-hoexter",
-    "name": "Kooperation Kaufleute im Einzelhandel & Industriemechaniker*in",
-    "bezirk": "Detmold", "anlage": "A",
-    "typ": "Schulversuch: Gemeinsamer Fachunterricht",
-    "status": "schwach", "statusLabel": "1 von 2 PoK eingereicht",
-    "bildungsgang": "Anlage A – Kaufleute im Einzelhandel & Industriemechaniker*in",
-    "beschreibung": "Die beiden kreiseigenen Berufskollegs des Kreises Höxter kooperieren im Rahmen eines Schulversuchs in zwei unterschiedlichen Ausbildungsberufen, um trotz geringer Schülerzahlen eine wohnortnahe Beschulung zu sichern. Das Johann-Conrad-Schlaun-Berufskolleg Warburg koordiniert die Kooperation.",
-    "distanz": "Die genauen Angaben zum Umfang des Distanzunterrichts liegen derzeit noch nicht vollständig vor und werden ergänzt, sobald alle Kooperationspartner ihre Unterlagen eingereicht haben.",
-    "hub": null,
-    "schools": [
-      {"name":"Johann-Conrad-Schlaun-Berufskolleg","ort":"Warburg","lat":51.489,"lng":9.146,"eingereicht":"ja"},
-      {"name":"Berufskolleg des Kreises Höxter","ort":"Höxter","lat":51.772,"lng":9.397,"eingereicht":"angekuendigt"}
-    ]
-  },
-  {
-    "id": "oberhausen-hybrid",
-    "name": "Kooperation Fachschule für Technik – Maschinenbautechnik",
-    "bezirk": "Düsseldorf", "anlage": "E",
-    "typ": "Hybridunterricht ab SJ 2026/27",
-    "status": "vollstaendig", "statusLabel": "3 von 3 PoK eingereicht",
-    "bildungsgang": "Anlage E – Fachschule für Technik, FR Maschinenbautechnik (Vollzeit)",
-    "beschreibung": "Drei Berufskollegs im Regierungsbezirk Düsseldorf entwickeln gemeinsam ein Hybridformat für die Fachschule Maschinenbautechnik (Vollzeit): Studierende sind an ihrem Heimatstandort in Präsenz und werden zeitgleich live per Video in den Unterricht der Partnerschule zugeschaltet. Das Konzept startet zum Schuljahr 2026/27.",
-    "distanz": "Dauerhafter Hybridbetrieb – kein klassischer Distanzunterricht, sondern permanente Videoverbindung zwischen den drei Standorten",
-    "hub": {"name":"Hybridverbund FS-MTB","lat":51.30,"lng":7.02},
-    "schools": [
-      {"name":"Hans-Sachs-Berufskolleg","ort":"Oberhausen","lat":51.474,"lng":6.851,"eingereicht":"ja"},
-      {"name":"Berufskolleg Werther Brücke","ort":"Wuppertal","lat":51.256,"lng":7.150,"eingereicht":"ja"},
-      {"name":"Technisches Berufskolleg Solingen","ort":"Solingen","lat":51.171,"lng":7.084,"eingereicht":"ja"}
-    ]
-  },
-  {
-    "id": "rvwbk-dup-lf10c",
-    "name": "Kooperation Fachinformatik – Daten- und Prozessanalyse",
-    "bezirk": "Detmold", "anlage": "A",
-    "typ": "Schulversuch: Gemeinsamer Fachunterricht",
-    "status": "teilweise", "statusLabel": "1 von 4 PoK eingereicht",
-    "bildungsgang": "Anlage A – Fachinformatiker/-in, FR Daten- und Prozessanalyse (DuP), Lernfeld 10c",
-    "beschreibung": "Vier Berufskollegs im Regierungsbezirk Detmold kooperieren seit dem Schuljahr 2023/24 im Lernfeld 10c \"Werkzeuge des maschinellen Lernens einsetzen\". Jede Schule verantwortet einen eigenen fachlichen Schwerpunkt und lädt die Auszubildenden aller vier Schulen einmal jährlich zu einem ganztägigen Präsenz-Intensivtag ein. Ab dem Schuljahr 2026/27 werden diese Intensivtage durch zwei synchrone Distanztage ergänzt. Federführend ist das Richard-von-Weizsäcker-Berufskolleg Paderborn.",
-    "distanz": "Ab SJ 2026/27: 24 h synchroner Distanzunterricht + 40 h Präsenz-Intensivtage + 16 h Selbstorganisiertes Lernen = 80 h gesamt (Lernfeld 10c)",
-    "hub": {"name":"RvWBK-Kooperation DuP","lat":51.96,"lng":8.71},
-    "schools": [
-      {"name":"Richard-von-Weizsäcker-Berufskolleg (RvWBK)","ort":"Paderborn","lat":51.718,"lng":8.754,"eingereicht":"ja"},
-      {"name":"August-Griese-Berufskolleg (AGBK)","ort":"Löhne","lat":52.196,"lng":8.694,"eingereicht":"nein"},
-      {"name":"Carl-Severing-BK f. Handwerk u. Technik (CSBK)","ort":"Bielefeld","lat":52.015,"lng":8.520,"eingereicht":"nein"},
-      {"name":"Dietrich-Bonhoeffer-Berufskolleg (DBB)","ort":"Detmold","lat":51.928,"lng":8.882,"eingereicht":"nein"}
-    ]
-  }
-]
+const COOPS = [{"id": "bochum-dq", "name": "RBZ Bochum – Doppelqualifizierung (DQ)", "bezirk": "Arnsberg", "anlage": "A", "typ": "Dachverbund mit Zusatzangebot", "status": "teilweise", "statusLabel": "3 von 5 PoK eingereicht", "bildungsgang": "Anlage A (versch. Ausbildungsberufe) + gemeinsamer DQ-Kurs zur Fachhochschulreife", "beschreibung": "Fünf Bochumer Berufskollegs bündeln ihre dual Auszubildenden in einem gemeinsamen Doppelqualifizierungs-Kurs zur Fachhochschulreife. Federführend (faktisch) das Louis-Baare-Berufskolleg.", "distanz": "20% Distanz / 80% Präsenz, synchron", "hub": {"name": "DQ-Kurs RBZ Bochum", "lat": 51.478, "lng": 7.222}, "schools": [{"name": "Louis-Baare-Berufskolleg", "ort": "Bochum", "lat": 51.483, "lng": 7.208, "eingereicht": true}, {"name": "Klaus-Steilmann-Berufskolleg", "ort": "Bochum", "lat": 51.47, "lng": 7.235, "eingereicht": true}, {"name": "Alice-Salomon-Berufskolleg", "ort": "Bochum", "lat": 51.49, "lng": 7.198, "eingereicht": true}, {"name": "Technische Berufsschule 1", "ort": "Bochum", "lat": 51.465, "lng": 7.245, "eingereicht": false}, {"name": "Walter-Gropius-Berufskolleg", "ort": "Bochum", "lat": 51.495, "lng": 7.25, "eingereicht": false}]}, {"id": "siegen-menden-unna", "name": "Schulversuch Technische*r Produktdesigner*in (MAK)", "bezirk": "Arnsberg", "anlage": "A", "typ": "Schulversuch zur Vermeidung Fachklasse", "status": "teilweise", "statusLabel": "2 von 3 PoK eingereicht", "bildungsgang": "Anlage A – Techn. Produktdesigner*in, FR Maschinen- und Anlagenkonstruktion (MAK)", "beschreibung": "Drei Berufskollegs mit jeweils zu wenigen Azubis in dieser Fachrichtung unterrichten sich ab dem 3. Ausbildungsjahr im Wechsel per Distanzunterricht, um eine zentrale Bezirksfachklasse zu vermeiden.", "distanz": "1 Berufsschultag/Woche im Wechsel, + 3 Wochen Blockunterricht/Jahr in Unna", "hub": {"name": "Schulversuch TPD/MAK", "lat": 51.3, "lng": 7.83}, "schools": [{"name": "Berufskolleg Technik Siegen-Wittgenstein", "ort": "Siegen", "lat": 50.875, "lng": 8.024, "eingereicht": true}, {"name": "Hönne-Berufskolleg Menden", "ort": "Menden", "lat": 51.432, "lng": 7.794, "eingereicht": true}, {"name": "Hellweg-Berufskolleg Unna", "ort": "Unna", "lat": 51.538, "lng": 7.689, "eingereicht": false}]}, {"id": "lippstadt-soest", "name": "Friseur*in-Kooperation Lippstadt–Soest", "bezirk": "Arnsberg", "anlage": "A", "typ": "Schulversuch zur Vermeidung Fachklasse", "status": "teilweise", "statusLabel": "1 von 2 PoK eingereicht", "bildungsgang": "Anlage A – Friseur*in, 2. Ausbildungsjahr", "beschreibung": "Bei geringen Schülerzahlen am Lippe-BK Lippstadt unterrichtet eine Lehrkraft des Börde-BK Soest die Lernenden zeitgleich auf Distanz mit, während sie ihre eigene Präsenzklasse unterrichtet.", "distanz": "1 Doppelstunde/Woche, 20% des Unterrichtsumfangs (nur 2. Ausbildungsjahr)", "hub": null, "schools": [{"name": "Lippe-Berufskolleg Lippstadt", "ort": "Lippstadt", "lat": 51.673, "lng": 8.353, "eingereicht": true}, {"name": "Börde-Berufskolleg Soest", "ort": "Soest", "lat": 51.572, "lng": 8.108, "eingereicht": false}]}, {"id": "halle-fhr", "name": "Berufsausbildung + Fachhochschulreife (BA+FHR)", "bezirk": "Detmold", "anlage": "A", "typ": "Dachverbund mit Zusatzangebot", "status": "teilweise", "statusLabel": "1 von 5 PoK eingereicht", "bildungsgang": "Anlage A (kaufmännische Berufe) + synchroner Distanzunterricht zur FHR", "beschreibung": "Wachsende Kooperation: 2024 mit 2 Schulen gestartet, ab 2025/26 auf 5 Standorte erweitert. Kaufmännische Azubis erwerben zusätzlich zur dualen Ausbildung die Fachhochschulreife.", "distanz": "4–5 Wochenstunden synchroner Distanzunterricht (Deutsch, Mathematik, Englisch, Naturwissenschaft)", "hub": {"name": "BA+FHR-Kooperation", "lat": 51.92, "lng": 8.62}, "schools": [{"name": "Berufskolleg Halle (Westf.)", "ort": "Halle (Westf.)", "lat": 52.053, "lng": 8.358, "eingereicht": true}, {"name": "HANSE-Berufskolleg Lemgo", "ort": "Lemgo", "lat": 52.027, "lng": 8.9, "eingereicht": false}, {"name": "Carl-Severing-Berufskolleg (CSBWV)", "ort": "Bielefeld", "lat": 52.012, "lng": 8.512, "eingereicht": false}, {"name": "Ludwig-Erhard-Berufskolleg", "ort": "Paderborn", "lat": 51.715, "lng": 8.745, "eingereicht": false}, {"name": "Rudolf-Rempel-Berufskolleg", "ort": "Bielefeld", "lat": 52.028, "lng": 8.548, "eingereicht": false}]}, {"id": "warburg-hoexter", "name": "Schulversuch RBZ Kreis Höxter", "bezirk": "Detmold", "anlage": "A", "typ": "Schulversuch zur Vermeidung Fachklasse", "status": "schwach", "statusLabel": "1 von 2 PoK eingereicht · Inhalte unvollständig", "bildungsgang": "Anlage A – Kaufmann/-frau im Einzelhandel + Industriemechaniker*in", "beschreibung": "Zwei kreiseigene Berufskollegs kooperieren in zwei unterschiedlichen Ausbildungsberufen. Das vorliegende PoK verweist fast durchgängig nur auf ein externes, nicht vorliegendes Dokument „Schulversuch RBZ“ – Distanzanteil und Organisationslogik bleiben unklar.", "distanz": "k. A. – im PoK nicht spezifiziert (Verweis auf fehlendes Referenzdokument)", "hub": null, "schools": [{"name": "Johann-Conrad-Schlaun-Berufskolleg", "ort": "Warburg", "lat": 51.489, "lng": 9.146, "eingereicht": true}, {"name": "Berufskolleg des Kreises Höxter", "ort": "Höxter", "lat": 51.772, "lng": 9.397, "eingereicht": false}]}, {"id": "oberhausen-hybrid", "name": "Fachschule Technik – Hybridverbund (MTB)", "bezirk": "Düsseldorf", "anlage": "E", "typ": "Hybridkooperation (in Planung)", "status": "vollstaendig", "statusLabel": "3 von 3 PoK eingereicht · Start 2026/27", "bildungsgang": "Anlage E – Fachschule für Technik, FR Maschinenbautechnik (Vollzeit)", "beschreibung": "Drei Standorte mit rückläufigen Schülerzahlen unterrichten sich ab 2026/27 gegenseitig per dauerhafter Videoverbindung (Hybrid, kein klassischer Distanzunterricht). Erste vollständig dokumentierte Kooperation aller Partnerschulen.", "distanz": "Hybrid: 50% Präsenz / 50% Video-Zuschaltung, kein klassischer Distanzunterricht", "hub": {"name": "Hybridverbund FS-MTB", "lat": 51.3, "lng": 7.02}, "schools": [{"name": "Hans-Sachs-Berufskolleg", "ort": "Oberhausen", "lat": 51.474, "lng": 6.851, "eingereicht": true}, {"name": "Berufskolleg Werther Brücke", "ort": "Wuppertal", "lat": 51.256, "lng": 7.15, "eingereicht": true}, {"name": "Technisches Berufskolleg Solingen", "ort": "Solingen", "lat": 51.171, "lng": 7.084, "eingereicht": true}]}];
 
 const ANLAGE_COLOR = { A: '#003064', E: '#175E54' };
 const STATUS_COLOR = { vollstaendig: '#009036', teilweise: '#E2001A', schwach: '#999' };
-const SCHOOL_COLOR = { 'ja': '#009036', 'angekuendigt': '#E87722', 'nein': '#E2001A' };
-const SCHOOL_LABEL = { 'ja': 'PoK eingereicht', 'angekuendigt': 'Nachreichung angekündigt', 'nein': 'PoK ausstehend' };
 
 function geoToSVG(lat, lng) {
   const x = (lng - 5.86) / (9.46 - 5.86) * 660 + 20;
@@ -413,10 +288,7 @@ function mk(tag){ return document.createElementNS('http://www.w3.org/2000/svg', 
 document.getElementById('svg').addEventListener('mousemove', moveTip);
 
 function visibleCoops() {
-  const ORDER = ['Arnsberg','Detmold','Düsseldorf','Köln','Münster'];
-  return COOPS
-    .filter(c => activeAnlage === 'alle' || c.anlage === activeAnlage)
-    .sort((a,b) => ORDER.indexOf(a.bezirk) - ORDER.indexOf(b.bezirk));
+  return COOPS.filter(c => activeAnlage === 'alle' || c.anlage === activeAnlage);
 }
 
 function renderCoopList() {
@@ -464,53 +336,6 @@ function addHubTriangle(gHubs, cx, cy, col, coop) {
   gHubs.appendChild(hg);
 }
 
-// ── JITTER: Leichte Versetzung überlappender Punkte ──────────────
-// Damit Schulen mehrerer Kooperationen am selben Ort sichtbar bleiben.
-// Jede Kooperation bekommt einen festen Winkelversatz; der Abstand
-// ist klein genug, um die geographische Aussage nicht zu verfälschen.
-const JITTER_RADIUS = 11; // px im SVG-Koordinatenraum
-function jitteredPos(basePt, coopIndex, totalCoops) {
-  if (totalCoops <= 1) return basePt;
-  const angle = (2 * Math.PI / totalCoops) * coopIndex - Math.PI / 2;
-  return {
-    x: Math.round((basePt.x + JITTER_RADIUS * Math.cos(angle)) * 10) / 10,
-    y: Math.round((basePt.y + JITTER_RADIUS * Math.sin(angle)) * 10) / 10
-  };
-}
-
-// Für jeden Geo-Punkt berechnen wir, wie viele sichtbare Kooperationen
-// diesen Punkt (innerhalb eines Toleranzradius) teilen.
-function buildOverlapMap(vis) {
-  const map = {}; // key: "coopId_schoolIdx" → {baseX, baseY, jX, jY}
-  const TOLERANCE = 20; // px – Punkte innerhalb dieser Distanz gelten als überlappend
-
-  vis.forEach((c, ci) => {
-    c.schools.forEach((s, si) => {
-      const base = geoToSVG(s.lat, s.lng);
-      // Finde alle anderen Schulen (anderer Kooperationen) in der Nähe
-      const neighbors = [];
-      vis.forEach((oc, oi) => {
-        if (oi === ci) return;
-        oc.schools.forEach(os => {
-          const op = geoToSVG(os.lat, os.lng);
-          const dist = Math.hypot(op.x - base.x, op.y - base.y);
-          if (dist < TOLERANCE) neighbors.push(oi);
-        });
-      });
-      const uniqueNeighborCoops = [...new Set(neighbors)];
-      if (uniqueNeighborCoops.length === 0) {
-        map[`${c.id}_${si}`] = { base, jit: base };
-      } else {
-        // alle betroffenen Koops sortiert → stabiler Index
-        const allCoops = [ci, ...uniqueNeighborCoops].sort((a,b)=>a-b);
-        const myIdx = allCoops.indexOf(ci);
-        map[`${c.id}_${si}`] = { base, jit: jitteredPos(base, myIdx, allCoops.length) };
-      }
-    });
-  });
-  return map;
-}
-
 function renderMap() {
   const gLinks = document.getElementById('g-links');
   const gHubs  = document.getElementById('g-hubs');
@@ -518,42 +343,45 @@ function renderMap() {
   gLinks.innerHTML = ''; gHubs.innerHTML = ''; gNodes.innerHTML = '';
 
   const vis = visibleCoops();
-  const overlapMap = buildOverlapMap(vis);
 
   vis.forEach(c => {
     const col = ANLAGE_COLOR[c.anlage];
     if (c.hub) {
       const hubPos = geoToSVG(c.hub.lat, c.hub.lng);
-      c.schools.forEach((s, si) => {
-        const jit = overlapMap[`${c.id}_${si}`]?.jit || geoToSVG(s.lat, s.lng);
+      // links from each school to hub
+      c.schools.forEach(s => {
+        const sp = geoToSVG(s.lat, s.lng);
         const line = mk('line');
-        line.setAttribute('x1', jit.x); line.setAttribute('y1', jit.y);
+        line.setAttribute('x1', sp.x); line.setAttribute('y1', sp.y);
         line.setAttribute('x2', hubPos.x); line.setAttribute('y2', hubPos.y);
         line.setAttribute('stroke', col); line.setAttribute('stroke-width','1.6'); line.setAttribute('stroke-opacity','.55');
         line.setAttribute('class','link-line'); line.dataset.coop = c.id;
         gLinks.appendChild(line);
       });
+      // hub triangle
       addHubTriangle(gHubs, hubPos.x, hubPos.y, col, c);
     } else {
-      const jit0 = overlapMap[`${c.id}_0`]?.jit || geoToSVG(c.schools[0].lat, c.schools[0].lng);
-      const jit1 = overlapMap[`${c.id}_1`]?.jit || geoToSVG(c.schools[1].lat, c.schools[1].lng);
+      // direct pair line
+      const a = geoToSVG(c.schools[0].lat, c.schools[0].lng);
+      const b = geoToSVG(c.schools[1].lat, c.schools[1].lng);
       const line = mk('line');
-      line.setAttribute('x1', jit0.x); line.setAttribute('y1', jit0.y);
-      line.setAttribute('x2', jit1.x); line.setAttribute('y2', jit1.y);
+      line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
       line.setAttribute('stroke', col); line.setAttribute('stroke-width','1.6'); line.setAttribute('stroke-opacity','.55');
       line.setAttribute('class','link-line'); line.dataset.coop = c.id;
       gLinks.appendChild(line);
-      const mx = Math.round((jit0.x + jit1.x) / 2 * 10) / 10;
-      const my = Math.round((jit0.y + jit1.y) / 2 * 10) / 10;
+      // triangle at midpoint of the pair line
+      const mx = Math.round((a.x + b.x) / 2 * 10) / 10;
+      const my = Math.round((a.y + b.y) / 2 * 10) / 10;
       addHubTriangle(gHubs, mx, my, col, c);
     }
 
-    c.schools.forEach((s, si) => {
-      const jit = overlapMap[`${c.id}_${si}`]?.jit || geoToSVG(s.lat, s.lng);
+    c.schools.forEach(s => {
+      const sp = geoToSVG(s.lat, s.lng);
       const g = mk('g'); g.setAttribute('class','school-node'); g.dataset.coop = c.id;
       const circle = mk('circle');
-      circle.setAttribute('cx', jit.x); circle.setAttribute('cy', jit.y); circle.setAttribute('r','7');
-      circle.setAttribute('fill', SCHOOL_COLOR[s.eingereicht] || '#E2001A');
+      circle.setAttribute('cx', sp.x); circle.setAttribute('cy', sp.y); circle.setAttribute('r','7');
+      circle.setAttribute('fill', s.eingereicht ? '#009036' : '#E2001A');
       circle.setAttribute('stroke','white'); circle.setAttribute('stroke-width','2');
       g.appendChild(circle);
       g.addEventListener('mouseenter', e => showTip(s, c, e));
@@ -567,7 +395,7 @@ function renderMap() {
 
 function showTip(school, coop, evt) {
   const tip = document.getElementById('school-tooltip');
-  tip.innerHTML = school.name + '<div class="tt-ort">' + school.ort + ' · ' + (SCHOOL_LABEL[school.eingereicht] || 'unbekannt') + '</div>';
+  tip.innerHTML = school.name + '<div class="tt-ort">' + school.ort + (school.eingereicht ? ' · PoK eingereicht' : ' · PoK ausstehend') + '</div>';
   tip.style.display = 'block';
   moveTip(evt);
 }
@@ -590,12 +418,10 @@ function moveTip(evt) {
 function selectCoop(id) {
   selectedCoop = id;
   const c = COOPS.find(x => x.id === id);
+  document.querySelectorAll('.coop-item').forEach(el => el.classList.remove('sel'));
   renderCoopList();
   document.querySelectorAll('.link-line').forEach(l => {
-    const isDim = l.dataset.coop !== id;
-    l.classList.toggle('dim', isDim);
-    l.style.opacity = isDim ? '0.04' : '1';
-    l.style.strokeWidth = isDim ? '1' : '2';
+    l.classList.toggle('dim', l.dataset.coop !== id);
   });
   document.querySelectorAll('.school-node, .hub-node').forEach(n => {
     n.classList.toggle('dim', n.dataset.coop !== id);
@@ -615,12 +441,10 @@ function showInfo(c) {
       <span class="ib-tag" style="background:${STATUS_COLOR[c.status]}">${c.statusLabel}</span>
     </div>
     <div class="ib-title">${c.name}</div>
-    <div class="ib-meta">${c.bezirk} &nbsp;·&nbsp; ${c.bildungsgang}</div>
-    <div class="ib-desc">${c.beschreibung}</div>
-    <div class="ib-distanz"><span class="ib-distanz-lbl">Distanzumfang</span>${c.distanz}</div>
-    <div class="ib-lbl" style="margin:10px 0 6px">Beteiligte Schulen</div>
+    <div class="ib-meta">${c.bezirk} · ${c.bildungsgang}</div>
+    <div class="ib-desc">${c.beschreibung}<br><strong>Distanzumfang:</strong> ${c.distanz}</div>
     <div class="ib-schools">
-      ${c.schools.map(s => `<span class="ib-school-tag">${s.name}, ${s.ort}</span>`).join('')}
+      ${c.schools.map(s => `<span class="ib-school-tag"><span class="${s.eingereicht?'check':'pend'}">${s.eingereicht?'✓':'○'}</span>${s.name} (${s.ort})</span>`).join('')}
     </div>
   `;
 }

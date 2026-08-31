@@ -10,11 +10,11 @@
   :root {
     --nrw-red: #c0001a;
     --nrw-green: #006c3e;
-    --bg: #f4f1eb;
+    --bg: #f0f2f5;
     --panel: #fff;
     --text: #1a1a2e;
     --muted: #6b7280;
-    --border: #e2ddd5;
+    --border: #dde2e8;
     --shadow: 0 4px 24px rgba(0,0,0,0.10);
 
     --technik: #0055a4;
@@ -419,7 +419,9 @@
     transition: border-color 0.15s;
   }
   .form-field input:focus, .form-field select:focus { border-color: var(--nrw-red); }
+  .form-field input:read-only { background: #f3f3f3; color: var(--muted); }
   .form-full { grid-column: 1 / -1; }
+  .form-hint { font-size: 11.5px; margin-top: -4px; margin-bottom: 4px; min-height: 14px; }
 
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
   .btn-dark { background: var(--text); color: white; border: none; padding: 9px 18px; border-radius: 7px; cursor: pointer; font-size: 13px; font-family: 'Source Sans 3', sans-serif; font-weight: 600; }
@@ -609,7 +611,8 @@
 <div class="overlay" id="admin-overlay" onclick="closeAdminIfOutside(event)">
   <div class="modal">
     <h2>⚙ Admin – Berufskollegs verwalten</h2>
-    <p class="modal-sub">Schulen anlegen, bearbeiten und Kooperationen verknüpfen. Daten werden im Browser gespeichert.</p>
+    <p class="modal-sub">Schulen anlegen, bearbeiten und Kooperationen verknüpfen. Daten werden im Browser gespeichert.<br>
+    Tipp: Beginne mit dem Schulnamen – ist die Schule in den Stammdaten (<code>schulen_nrw.json</code>) vorhanden, werden Bezirk und Koordinaten automatisch übernommen.</p>
 
     <div class="school-cards-grid" id="admin-cards"></div>
 
@@ -618,7 +621,9 @@
       <div class="form-grid">
         <div class="form-field form-full">
           <label>Name des Berufskollegs *</label>
-          <input type="text" id="f-name" placeholder="z.B. Richard-von-Weizsäcker-BK Paderborn">
+          <input type="text" id="f-name" list="master-school-list" placeholder="Namen eingeben oder aus Stammdaten wählen" oninput="onMasterNameInput()">
+          <datalist id="master-school-list"></datalist>
+          <div class="form-hint" id="f-master-hint"></div>
         </div>
         <div class="form-field">
           <label>Bezirksregierung *</label>
@@ -649,8 +654,8 @@
           <input type="text" id="f-bg" placeholder="z.B. Elektrotechnik">
         </div>
         <div class="form-field">
-          <label>Kooperationspartner-ID (optional)</label>
-          <input type="text" id="f-partner" placeholder="ID der Partnerschule">
+          <label>Partner-IDs (kommagetrennt, z.B. S01,S03)</label>
+          <input type="text" id="f-partner" placeholder="z.B. S01,S03">
         </div>
         <div class="form-field">
           <label>Breitengrad (lat)</label>
@@ -682,7 +687,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "technik",
     anlage: "Anlage E",
     bildungsgang: "Elektrotechnik / Maschinenbautechnik",
-    partnerId: "S02",
+    partnerIds: ["S02", "S03"],
     lat: 51.72,
     lng: 8.74
   },
@@ -693,7 +698,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "technik",
     anlage: "Anlage E",
     bildungsgang: "Elektrotechnik",
-    partnerId: "S01",
+    partnerIds: ["S01"],
     lat: 52.02,
     lng: 8.52
   },
@@ -704,7 +709,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "technik",
     anlage: "Anlage E",
     bildungsgang: "Maschinenbautechnik",
-    partnerId: "S04",
+    partnerIds: ["S04", "S01"],
     lat: 51.96,
     lng: 7.63
   },
@@ -715,7 +720,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "technik",
     anlage: "Anlage E",
     bildungsgang: "Maschinenbautechnik",
-    partnerId: "S03",
+    partnerIds: ["S03"],
     lat: 51.93,
     lng: 8.88
   },
@@ -726,7 +731,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "wirtschaft",
     anlage: "Anlage A",
     bildungsgang: "Betriebswirtschaft",
-    partnerId: "S06",
+    partnerIds: ["S06"],
     lat: 51.52,
     lng: 7.47
   },
@@ -737,7 +742,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "wirtschaft",
     anlage: "Anlage A",
     bildungsgang: "Betriebswirtschaft",
-    partnerId: "S05",
+    partnerIds: ["S05"],
     lat: 51.22,
     lng: 6.78
   },
@@ -748,7 +753,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "gesundheit",
     anlage: "Anlage B",
     bildungsgang: "Pflegewissenschaft",
-    partnerId: "S08",
+    partnerIds: ["S08"],
     lat: 50.94,
     lng: 6.96
   },
@@ -759,7 +764,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "gesundheit",
     anlage: "Anlage B",
     bildungsgang: "Pflegewissenschaft",
-    partnerId: "S07",
+    partnerIds: ["S07"],
     lat: 50.77,
     lng: 6.09
   },
@@ -770,7 +775,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "soziales",
     anlage: "Anlage C",
     bildungsgang: "Sozialpädagogik",
-    partnerId: "S10",
+    partnerIds: ["S10"],
     lat: 50.73,
     lng: 7.10
   },
@@ -781,7 +786,7 @@ const DEFAULT_SCHOOLS = [
     kategorie: "soziales",
     anlage: "Anlage C",
     bildungsgang: "Sozialpädagogik",
-    partnerId: "S09",
+    partnerIds: ["S09"],
     lat: 51.26,
     lng: 7.15
   }
@@ -806,6 +811,7 @@ function geoToSVG(lat, lng) {
 // ═══════════════════════════════════════════
 
 let schools = [];
+let masterSchools = [];
 let activeFilter = 'alle';
 let activeBezirk = 'alle';
 let selectedId = null;
@@ -826,10 +832,64 @@ function init() {
   const saved = localStorage.getItem('pok-schools');
   schools = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_SCHOOLS));
   render();
+  loadMasterSchools();
 }
 
 function save() {
   localStorage.setItem('pok-schools', JSON.stringify(schools));
+}
+
+// ═══════════════════════════════════════════
+//  STAMMDATEN (schulen_nrw.json) – Namens-Suche
+//  mit automatischer Übernahme von Bezirk/Position
+// ═══════════════════════════════════════════
+
+async function loadMasterSchools() {
+  try {
+    const res = await fetch('schulen_nrw.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    masterSchools = await res.json();
+  } catch (err) {
+    console.warn('Stammdaten (schulen_nrw.json) konnten nicht geladen werden. Falls die Seite per Doppelklick (file://) geöffnet wurde: lokalen Webserver starten, z.B. "npx serve ." oder "python -m http.server" im Projektordner, dann die Seite über http://localhost öffnen.', err);
+    masterSchools = [];
+  }
+  populateMasterDatalist();
+}
+
+function populateMasterDatalist() {
+  const list = document.getElementById('master-school-list');
+  list.innerHTML = '';
+  masterSchools.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    list.appendChild(opt);
+  });
+}
+
+function onMasterNameInput() {
+  const name = document.getElementById('f-name').value.trim();
+  const latInput = document.getElementById('f-lat');
+  const lngInput = document.getElementById('f-lng');
+  const bezirkSelect = document.getElementById('f-bezirk');
+  const hint = document.getElementById('f-master-hint');
+  const match = masterSchools.find(m => m.name === name);
+
+  if (match) {
+    latInput.value = match.lat;
+    lngInput.value = match.lng;
+    bezirkSelect.value = match.bezirk;
+    latInput.readOnly = true;
+    lngInput.readOnly = true;
+    hint.textContent = `✓ Position aus Stammdaten übernommen (${match.bezirk}${match.ort ? ', ' + match.ort : ''})`;
+    hint.style.color = 'var(--nrw-green)';
+  } else {
+    latInput.readOnly = false;
+    lngInput.readOnly = false;
+    hint.textContent = name && masterSchools.length
+      ? '⚠ Nicht in den Stammdaten gefunden – Bezirk & Koordinaten bitte manuell eintragen.'
+      : '';
+    hint.style.color = 'var(--muted)';
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -862,25 +922,27 @@ function renderNodes() {
   // Draw connection lines first
   const drawn = new Set();
   visible.forEach(s => {
-    if (!s.partnerId) return;
-    const partner = schools.find(p => p.id === s.partnerId);
-    if (!partner || !visibleIds.has(partner.id)) return;
-    const key = [s.id, s.partnerId].sort().join('-');
-    if (drawn.has(key)) return;
-    drawn.add(key);
+    if (!s.partnerIds?.length) return;
+    s.partnerIds.forEach(pid => {
+      const partner = schools.find(p => p.id === pid);
+      if (!partner || !visibleIds.has(partner.id)) return;
+      const key = [s.id, pid].sort().join('-');
+      if (drawn.has(key)) return;
+      drawn.add(key);
 
-    const a = geoToSVG(s.lat, s.lng);
-    const b = geoToSVG(partner.lat, partner.lng);
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
-    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
-    line.setAttribute('stroke', COLORS[s.kategorie] || '#888');
-    line.setAttribute('stroke-width', '2');
-    line.setAttribute('stroke-opacity', '0.5');
-    line.setAttribute('class', 'connection-line');
-    line.dataset.a = s.id;
-    line.dataset.b = s.partnerId;
-    linesG.appendChild(line);
+      const a = geoToSVG(s.lat, s.lng);
+      const b = geoToSVG(partner.lat, partner.lng);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+      line.setAttribute('stroke', COLORS[s.kategorie] || '#888');
+      line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('stroke-opacity', '0.25');
+      line.setAttribute('class', 'connection-line');
+      line.dataset.a = s.id;
+      line.dataset.b = pid;
+      linesG.appendChild(line);
+    });
   });
 
   // Draw school nodes
@@ -930,7 +992,7 @@ function renderList() {
       <span class="stag" style="background:${COLORS[s.kategorie]}">${capFirst(s.kategorie)}</span>
     `;
     item.addEventListener('click', () => onNodeClick(s));
-    item.addEventListener('mouseenter', () => highlightPair(s.id, s.partnerId));
+    item.addEventListener('mouseenter', () => highlightConnected(s.id));
     item.addEventListener('mouseleave', clearHighlight);
     list.appendChild(item);
   });
@@ -946,11 +1008,13 @@ function updateCount() {
 
 function onNodeHover(s, e) {
   const tip = document.getElementById('tooltip');
-  const partner = schools.find(p => p.id === s.partnerId);
-  tip.innerHTML = `<strong>${s.name}</strong>${s.bezirk} · ${capFirst(s.kategorie)}<br>${s.anlage || ''} · ${s.bildungsgang || ''}${partner ? `<br>🔗 Partner: ${partner.name}` : ''}`;
+  const partnerNames = (s.partnerIds || [])
+    .map(pid => schools.find(p => p.id === pid)?.name)
+    .filter(Boolean);
+  tip.innerHTML = `<strong>${s.name}</strong>${s.bezirk} · ${capFirst(s.kategorie)}<br>${s.anlage || ''} · ${s.bildungsgang || ''}${partnerNames.length ? `<br>🔗 ${partnerNames.join(' · ')}` : ''}`;
   tip.classList.add('show');
   moveTip(e);
-  highlightPair(s.id, s.partnerId);
+  highlightConnected(s.id);
 }
 
 function onNodeLeave() {
@@ -971,47 +1035,50 @@ document.getElementById('nrw-svg').addEventListener('mousemove', (e) => {
 function onNodeClick(s) {
   selectedId = s.id;
   showInfobox(s);
-  highlightPair(s.id, s.partnerId);
-  // sidebar list highlight
+  highlightConnected(s.id);
   document.querySelectorAll('.school-item').forEach(el => {
     el.classList.toggle('selected', el.dataset.id === s.id);
   });
 }
 
-function highlightPair(idA, idB) {
-  const nodes = document.querySelectorAll('.school-node');
-  nodes.forEach(n => {
+function highlightConnected(clickedId) {
+  const school = schools.find(s => s.id === clickedId);
+  if (!school) return;
+  const connected = new Set(school.partnerIds || []);
+  schools.forEach(s => { if (s.partnerIds?.includes(clickedId)) connected.add(s.id); });
+
+  document.querySelectorAll('.school-node').forEach(n => {
     const id = n.dataset.id;
-    if (id === idA || id === idB) {
+    if (id === clickedId) {
+      n.classList.remove('dimmed', 'partner-glow');
+    } else if (connected.has(id)) {
       n.classList.remove('dimmed');
-      if (id === idB) n.classList.add('partner-glow');
-      else n.classList.remove('partner-glow');
+      n.classList.add('partner-glow');
     } else {
       n.classList.add('dimmed');
+      n.classList.remove('partner-glow');
     }
   });
-  // highlight list items
   document.querySelectorAll('.school-item').forEach(el => {
-    el.classList.toggle('highlighted', el.dataset.id === idA || el.dataset.id === idB);
+    el.classList.toggle('highlighted', el.dataset.id === clickedId || connected.has(el.dataset.id));
   });
-  // highlight connection
   document.querySelectorAll('.connection-line').forEach(l => {
     const a = l.dataset.a, b = l.dataset.b;
-    const match = (a === idA && b === idB) || (a === idB && b === idA);
-    l.setAttribute('stroke-opacity', match ? '1' : '0.15');
+    const match = a === clickedId || b === clickedId;
+    l.setAttribute('stroke-opacity', match ? '0.9' : '0.1');
     l.setAttribute('stroke-width', match ? '3' : '1.5');
   });
 }
 
 function clearHighlight() {
-  if (selectedId) return; // keep if something selected
+  if (selectedId) return;
   document.querySelectorAll('.school-node').forEach(n => {
     n.classList.remove('dimmed', 'highlighted', 'partner-glow');
   });
   document.querySelectorAll('.school-item').forEach(el => el.classList.remove('highlighted'));
   document.querySelectorAll('.connection-line').forEach(l => {
-    l.setAttribute('stroke-opacity', '0.5');
-    l.setAttribute('stroke-width', '2');
+    l.setAttribute('stroke-opacity', '0.25');
+    l.setAttribute('stroke-width', '1.5');
   });
 }
 
@@ -1021,8 +1088,8 @@ function resetView() {
   document.querySelectorAll('.school-node').forEach(n => n.classList.remove('dimmed','partner-glow'));
   document.querySelectorAll('.school-item').forEach(el => el.classList.remove('selected','highlighted'));
   document.querySelectorAll('.connection-line').forEach(l => {
-    l.setAttribute('stroke-opacity', '0.5');
-    l.setAttribute('stroke-width', '2');
+    l.setAttribute('stroke-opacity', '0.25');
+    l.setAttribute('stroke-width', '1.5');
   });
   document.getElementById('infobox-empty').style.display = 'flex';
   document.getElementById('infobox-content').style.display = 'none';
@@ -1033,24 +1100,23 @@ function resetView() {
 // ═══════════════════════════════════════════
 
 function showInfobox(s) {
-  const partner = schools.find(p => p.id === s.partnerId);
   const empty = document.getElementById('infobox-empty');
   const content = document.getElementById('infobox-content');
   empty.style.display = 'none';
   content.style.display = 'flex';
   content.innerHTML = '';
 
-  const cardA = makeInfoCard(s, 'Schule A', true);
-  content.appendChild(cardA);
+  content.appendChild(makeInfoCard(s, 'Ausgewählt', true));
 
-  if (partner) {
+  (s.partnerIds || []).forEach((pid, i) => {
+    const partner = schools.find(p => p.id === pid);
+    if (!partner) return;
     const arrow = document.createElement('div');
     arrow.className = 'partner-arrow';
     arrow.textContent = '⇄';
     content.appendChild(arrow);
-    const cardB = makeInfoCard(partner, 'Schule B', false);
-    content.appendChild(cardB);
-  }
+    content.appendChild(makeInfoCard(partner, `Partner ${i + 1}`, false));
+  });
 }
 
 function makeInfoCard(s, label, isA) {
@@ -1122,7 +1188,7 @@ function renderAdminCards() {
       <div class="sca-meta">
         ${s.bezirk} · ${capFirst(s.kategorie)}<br>
         ${s.anlage || '–'} · ${s.bildungsgang || '–'}<br>
-        <span style="color:#888">ID: ${s.id}${s.partnerId ? ` | Partner: ${s.partnerId}` : ''}</span>
+        <span style="color:#888">ID: ${s.id}${s.partnerIds?.length ? ` | Partner: ${s.partnerIds.join(', ')}` : ''}</span>
       </div>
     `;
     grid.appendChild(div);
@@ -1140,7 +1206,9 @@ function addSchool() {
     kategorie: document.getElementById('f-cat').value,
     anlage: document.getElementById('f-anlage').value.trim(),
     bildungsgang: document.getElementById('f-bg').value.trim(),
-    partnerId: document.getElementById('f-partner').value.trim() || null,
+    partnerIds: document.getElementById('f-partner').value.trim()
+      ? document.getElementById('f-partner').value.trim().split(',').map(s => s.trim()).filter(Boolean)
+      : [],
     lat: parseFloat(document.getElementById('f-lat').value) || 51.5,
     lng: parseFloat(document.getElementById('f-lng').value) || 7.5
   };
@@ -1148,6 +1216,9 @@ function addSchool() {
   save();
   renderAdminCards();
   ['f-name','f-anlage','f-bg','f-partner','f-lat','f-lng'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-lat').readOnly = false;
+  document.getElementById('f-lng').readOnly = false;
+  document.getElementById('f-master-hint').textContent = '';
 }
 
 function deleteSchool(id) {
