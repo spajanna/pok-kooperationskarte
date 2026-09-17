@@ -276,16 +276,16 @@ const COOPS = [
     "name": "Kooperation Berufsausbildung + Fachhochschulreife (BA+FHR)",
     "bezirk": "Detmold", "anlage": "A",
     "typ": "Gemeinsames Zusatzangebot",
-    "status": "schwach", "statusLabel": "3 von 5 PoK eingereicht",
+    "status": "vollstaendig", "statusLabel": "5 von 5 PoK eingereicht",
     "bildungsgang": "Anlage A – kaufmännische Ausbildungsberufe",
-    "beschreibung": "Fünf Berufskollegs im Regierungsbezirk Detmold ermöglichen kaufmännischen Auszubildenden, parallel zur dualen Ausbildung die Fachhochschulreife zu erwerben. Die Kooperation startete 2024 mit zwei Schulen und wurde ab dem Schuljahr 2025/26 auf fünf Standorte ausgeweitet. Koordiniert wird die Kooperation durch das Carl-Severing-Berufskolleg für Wirtschaft und Verwaltung (CSBWV) Bielefeld.",
+    "beschreibung": "Fünf Berufskollegs im Regierungsbezirk Detmold ermöglichen kaufmännischen Auszubildenden, parallel zur dualen Ausbildung die Fachhochschulreife zu erwerben. Die Kooperation startete 2024 mit zwei Schulen und wurde ab dem Schuljahr 2025/26 auf fünf Standorte ausgeweitet. Koordiniert wird die Kooperation durch das Carl-Severing-Berufskolleg für Wirtschaft und Verwaltung (CSBWV) Bielefeld gemeinsam mit dem HANSE-Berufskolleg Lemgo als aktivem Kooperationskern; Berufskolleg Halle, Ludwig-Erhard-Berufskolleg und Rudolf-Rempel-Berufskolleg ermöglichen als Partnerschulen ihren eigenen Auszubildenden den Zugang.",
     "distanz": "4–5 Wochenstunden synchroner Distanzunterricht (Deutsch, Mathematik, Englisch, Naturwissenschaft)",
     "hub": {"name":"BA+FHR-Kooperation","lat":52.02,"lng":8.52},
     "schools": [
-      {"name":"Carl-Severing-BK f. Wirtschaft u. Verwaltung (CSBWV)","ort":"Bielefeld","lat":52.022,"lng":8.530,"eingereicht":"angekuendigt"},
+      {"name":"Carl-Severing-BK f. Wirtschaft u. Verwaltung (CSBWV)","ort":"Bielefeld","lat":52.022,"lng":8.530,"eingereicht":"ja"},
       {"name":"HANSE-Berufskolleg","ort":"Lemgo","lat":52.027,"lng":8.900,"eingereicht":"ja"},
       {"name":"Berufskolleg Halle (Westf.)","ort":"Halle (Westf.)","lat":52.053,"lng":8.358,"eingereicht":"ja"},
-      {"name":"Ludwig-Erhard-Berufskolleg","ort":"Paderborn","lat":51.715,"lng":8.745,"eingereicht":"angekuendigt"},
+      {"name":"Ludwig-Erhard-Berufskolleg","ort":"Paderborn","lat":51.715,"lng":8.745,"eingereicht":"ja"},
       {"name":"Rudolf-Rempel-Berufskolleg","ort":"Bielefeld","lat":52.028,"lng":8.548,"eingereicht":"ja"}
     ]
   },
@@ -294,14 +294,14 @@ const COOPS = [
     "name": "Kooperation Kaufleute im Einzelhandel & Industriemechaniker*in",
     "bezirk": "Detmold", "anlage": "A",
     "typ": "Schulversuch: Gemeinsamer Fachunterricht",
-    "status": "schwach", "statusLabel": "1 von 2 PoK eingereicht",
+    "status": "vollstaendig", "statusLabel": "2 von 2 PoK eingereicht",
     "bildungsgang": "Anlage A – Kaufleute im Einzelhandel & Industriemechaniker*in",
-    "beschreibung": "Die beiden kreiseigenen Berufskollegs des Kreises Höxter kooperieren im Rahmen eines Schulversuchs in zwei unterschiedlichen Ausbildungsberufen, um trotz geringer Schülerzahlen eine wohnortnahe Beschulung zu sichern. Das Johann-Conrad-Schlaun-Berufskolleg Warburg koordiniert die Kooperation.",
-    "distanz": "Die genauen Angaben zum Umfang des Distanzunterrichts liegen derzeit noch nicht vollständig vor und werden ergänzt, sobald alle Kooperationspartner ihre Unterlagen eingereicht haben.",
+    "beschreibung": "Die beiden kreiseigenen Berufskollegs des Kreises Höxter kooperieren im Rahmen eines Schulversuchs in zwei unterschiedlichen Ausbildungsberufen, um trotz geringer Schülerzahlen eine wohnortnahe Beschulung zu sichern. Das Johann-Conrad-Schlaun-Berufskolleg Warburg koordiniert die Kooperation. Hinweis: Die inhaltlichen pädagogischen Angaben beider Schulen verweisen durchgängig auf ein zusätzliches Referenzdokument „Schulversuch RBZ\", das bei der Auswertung nicht vorlag.",
+    "distanz": "Die genauen Angaben zum Umfang des Distanzunterrichts liegen nicht vor, da beide PoK-Formulare hierzu nur auf das nicht vorliegende Referenzdokument „Schulversuch RBZ\" verweisen.",
     "hub": null,
     "schools": [
       {"name":"Johann-Conrad-Schlaun-Berufskolleg","ort":"Warburg","lat":51.489,"lng":9.146,"eingereicht":"ja"},
-      {"name":"Berufskolleg des Kreises Höxter","ort":"Höxter","lat":51.772,"lng":9.397,"eingereicht":"angekuendigt"}
+      {"name":"Berufskolleg des Kreises Höxter","ort":"Höxter","lat":51.772,"lng":9.397,"eingereicht":"ja"}
     ]
   },
   {
@@ -576,7 +576,11 @@ function hideTip() {
 }
 function showHubTip(coop, evt) {
   const tip = document.getElementById('school-tooltip');
-  tip.innerHTML = coop.hub.name + '<div class="tt-ort">Gemeinsamer Knotenpunkt · ' + coop.schools.length + ' Schulen</div>';
+  const title = coop.hub ? coop.hub.name : coop.name;
+  const sub = coop.hub
+    ? 'Gemeinsamer Knotenpunkt · ' + coop.schools.length + ' Schulen'
+    : coop.schools.length + ' Schulen';
+  tip.innerHTML = title + '<div class="tt-ort">' + sub + '</div>';
   tip.style.display = 'block';
   moveTip(evt);
 }
